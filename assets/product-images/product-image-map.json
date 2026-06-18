@@ -1,0 +1,410 @@
+{
+  "AM2": {
+    "file": "assets/product-images/AM2.jpg",
+    "source": "2. 产品图片Product Picture/ArtMorph/ArtMorph 20241115/ArtMorph full panel/ArtMorph 20241115.1.png",
+    "score": 128,
+    "name": "ArtMorph"
+  },
+  "AM6": {
+    "file": "assets/product-images/AM6.jpg",
+    "source": "2. 产品图片Product Picture/ArtMorph/ArtMorph 20241115/ArtMorph full panel/ArtMorph 20241115.1.png",
+    "score": 128,
+    "name": "ArtMorph"
+  },
+  "CR0.9": {
+    "file": "assets/product-images/CR0.9.jpg",
+    "source": "2. 产品图片Product Picture/Coral COB/Coral 20231007.bip (1).png",
+    "score": 204,
+    "name": "Coral"
+  },
+  "CR1.2": {
+    "file": "assets/product-images/CR1.2.jpg",
+    "source": "2. 产品图片Product Picture/Coral COB/Coral 20231007.bip (1).png",
+    "score": 204,
+    "name": "Coral"
+  },
+  "CR1.5": {
+    "file": "assets/product-images/CR1.5.jpg",
+    "source": "2. 产品图片Product Picture/Coral COB/Coral 20231007.bip (1).png",
+    "score": 204,
+    "name": "Coral"
+  },
+  "CRS0.9": {
+    "file": "assets/product-images/CRS0.9.jpg",
+    "source": "2. 产品图片Product Picture/Coral COB/Coral Stacking 20231018.32.png",
+    "score": 107,
+    "name": "Coral S"
+  },
+  "CRS1.2": {
+    "file": "assets/product-images/CRS1.2.jpg",
+    "source": "2. 产品图片Product Picture/Coral COB/Coral Stacking 20231018.32.png",
+    "score": 107,
+    "name": "Coral S"
+  },
+  "CRS1.5": {
+    "file": "assets/product-images/CRS1.5.jpg",
+    "source": "2. 产品图片Product Picture/Coral COB/Coral Stacking 20231018.32.png",
+    "score": 107,
+    "name": "Coral S"
+  },
+  "DL0.7": {
+    "file": "assets/product-images/DL0.7.jpg",
+    "source": "2. 产品图片Product Picture/Denali/Renders/Denali 202412.10 (2).png",
+    "score": 150,
+    "name": "Denali"
+  },
+  "DL0.9": {
+    "file": "assets/product-images/DL0.9.jpg",
+    "source": "2. 产品图片Product Picture/Denali/Renders/Denali 202412.10 (2).png",
+    "score": 150,
+    "name": "Denali"
+  },
+  "DL1.2": {
+    "file": "assets/product-images/DL1.2.jpg",
+    "source": "2. 产品图片Product Picture/Denali/Renders/Denali 202412.10 (2).png",
+    "score": 150,
+    "name": "Denali"
+  },
+  "RL1.2": {
+    "file": "assets/product-images/RL1.2.jpg",
+    "source": "2. 产品图片Product Picture/Rila/Renders/Rila 20251125.1 b.png",
+    "score": 148,
+    "name": "Rila"
+  },
+  "SR1.2": {
+    "file": "assets/product-images/SR1.2.jpg",
+    "source": "2. 产品图片Product Picture/FI products pictures/Sierra 1.2.png",
+    "score": 106,
+    "name": "Sierra"
+  },
+  "SR1.5": {
+    "file": "assets/product-images/SR1.5.jpg",
+    "source": "2. 产品图片Product Picture/FI products pictures/Sierra 1.2.png",
+    "score": 106,
+    "name": "Sierra"
+  },
+  "MRC1.9": {
+    "file": "assets/product-images/MRC1.9.jpg",
+    "source": "2. 产品图片Product Picture/Meru/Renders/Meru-C/Meru Curve 20251021.22.png",
+    "score": 340,
+    "name": "Meru-C"
+  },
+  "MR1.5": {
+    "file": "assets/product-images/MR1.5.jpg",
+    "source": "2. 产品图片Product Picture/Meru/Renders/Application Scenario/iStock-1355817783.jpg",
+    "score": 148,
+    "name": "Meru"
+  },
+  "MR1.9": {
+    "file": "assets/product-images/MR1.9.jpg",
+    "source": "2. 产品图片Product Picture/Meru/Renders/Application Scenario/iStock-1355817783.jpg",
+    "score": 148,
+    "name": "Meru"
+  },
+  "MR2.6": {
+    "file": "assets/product-images/MR2.6.jpg",
+    "source": "2. 产品图片Product Picture/Meru/Renders/Application Scenario/iStock-1355817783.jpg",
+    "score": 148,
+    "name": "Meru"
+  },
+  "MR3.9": {
+    "file": "assets/product-images/MR3.9.jpg",
+    "source": "2. 产品图片Product Picture/Meru/Renders/Application Scenario/iStock-1355817783.jpg",
+    "score": 148,
+    "name": "Meru"
+  },
+  "JT1.9": {
+    "file": "assets/product-images/JT1.9.jpg",
+    "source": "2. 产品图片Product Picture/Jet/JET 20240315.32 拷贝.png",
+    "score": 103,
+    "name": "JET"
+  },
+  "JT2.2": {
+    "file": "assets/product-images/JT2.2.jpg",
+    "source": "2. 产品图片Product Picture/Jet/JET 20240315.32 拷贝.png",
+    "score": 103,
+    "name": "JET"
+  },
+  "JT2.6": {
+    "file": "assets/product-images/JT2.6.jpg",
+    "source": "2. 产品图片Product Picture/Jet/JET 20240315.32 拷贝.png",
+    "score": 103,
+    "name": "JET"
+  },
+  "JT3.1": {
+    "file": "assets/product-images/JT3.1.jpg",
+    "source": "2. 产品图片Product Picture/Jet/JET 20240315.32 拷贝.png",
+    "score": 103,
+    "name": "JET"
+  },
+  "JT3.9": {
+    "file": "assets/product-images/JT3.9.jpg",
+    "source": "2. 产品图片Product Picture/Jet/JET 20240315.32 拷贝.png",
+    "score": 103,
+    "name": "JET"
+  },
+  "BQ3.9": {
+    "file": "assets/product-images/BQ3.9.jpg",
+    "source": "2. 产品图片Product Picture/Black Quartz/BQ/Renders/20200911/BQ_Renders_1.png",
+    "score": 273,
+    "name": "Black Quartz"
+  },
+  "BQ4.6": {
+    "file": "assets/product-images/BQ4.6.jpg",
+    "source": "2. 产品图片Product Picture/Black Quartz/BQ/Renders/20200911/BQ_Renders_1.png",
+    "score": 273,
+    "name": "Black Quartz"
+  },
+  "BQ6.2": {
+    "file": "assets/product-images/BQ6.2.jpg",
+    "source": "2. 产品图片Product Picture/Black Quartz/BQ/Renders/20200911/BQ_Renders_1.png",
+    "score": 273,
+    "name": "Black Quartz"
+  },
+  "BP2V2": {
+    "file": "assets/product-images/BP2V2.jpg",
+    "source": "2. 产品图片Product Picture/Black Pearl/New/BP2 V2/for ppt/BP light.png",
+    "score": 364,
+    "name": "Black Pearl"
+  },
+  "BP2": {
+    "file": "assets/product-images/BP2.jpg",
+    "source": "2. 产品图片Product Picture/Black Pearl/New/BP2 V2/for ppt/BP light.png",
+    "score": 361,
+    "name": "Black Pearl"
+  },
+  "RB1.2F(4in1)": {
+    "file": "assets/product-images/RB1.2F_4in1.jpg",
+    "source": "2. 产品图片Product Picture/RB & RB-C/Renders/RB/RUBY 20220606.454 - 副本.png",
+    "score": 456,
+    "name": "Ruby"
+  },
+  "RB1.9F(4in1)": {
+    "file": "assets/product-images/RB1.9F_4in1.jpg",
+    "source": "2. 产品图片Product Picture/RB & RB-C/Renders/RB/RUBY 20220606.454 - 副本.png",
+    "score": 456,
+    "name": "Ruby"
+  },
+  "RB2.2F": {
+    "file": "assets/product-images/RB2.2F.jpg",
+    "source": "2. 产品图片Product Picture/RB & RB-C/Renders/Ruby Series with mockup/RB2.2F.png",
+    "score": 582,
+    "name": "Ruby"
+  },
+  "RB2.6F(flip chip)": {
+    "file": "assets/product-images/RB2.6F_flip_chip.jpg",
+    "source": "2. 产品图片Product Picture/RB & RB-C/Renders/RB/RUBY 20220606.454 - 副本.png",
+    "score": 456,
+    "name": "Ruby"
+  },
+  "RB1.5F(4in1)": {
+    "file": "assets/product-images/RB1.5F_4in1.jpg",
+    "source": "2. 产品图片Product Picture/RB & RB-C/Renders/RB/RUBY 20220606.454 - 副本.png",
+    "score": 456,
+    "name": "Ruby"
+  },
+  "RB2.3": {
+    "file": "assets/product-images/RB2.3.jpg",
+    "source": "2. 产品图片Product Picture/RB & RB-C/Renders/RB/RUBY 20220606.454 - 副本.png",
+    "score": 456,
+    "name": "Ruby"
+  },
+  "RBC1.9BV2": {
+    "file": "assets/product-images/RBC1.9BV2.jpg",
+    "source": "2. 产品图片Product Picture/RB & RB-C/Renders/RB-C/Ruby-C 1.9/RB-C1.9 20230616.png",
+    "score": 437,
+    "name": "Ruby-C"
+  },
+  "TP1.5": {
+    "file": "assets/product-images/TP1.5.jpg",
+    "source": "2. 产品图片Product Picture/Topaz/TP- combine 20231107.35.png",
+    "score": 130,
+    "name": "Topaz"
+  },
+  "TP1.9V2": {
+    "file": "assets/product-images/TP1.9V2.jpg",
+    "source": "2. 产品图片Product Picture/Topaz/TP- combine 20231107.35.png",
+    "score": 130,
+    "name": "Topaz"
+  },
+  "TP2.2": {
+    "file": "assets/product-images/TP2.2.jpg",
+    "source": "2. 产品图片Product Picture/Topaz/TP- combine 20231107.35.png",
+    "score": 130,
+    "name": "Topaz"
+  },
+  "TP2.6": {
+    "file": "assets/product-images/TP2.6.jpg",
+    "source": "2. 产品图片Product Picture/Topaz/TP- combine 20231107.35.png",
+    "score": 130,
+    "name": "Topaz"
+  },
+  "CB3MK2": {
+    "file": "assets/product-images/CB3MK2.jpg",
+    "source": "2. 产品图片Product Picture/CB MKII/render/CB3 MKII/CB3 MKII.1.png",
+    "score": 387,
+    "name": "Carbon MarkII"
+  },
+  "CB5MK2": {
+    "file": "assets/product-images/CB5MK2.jpg",
+    "source": "2. 产品图片Product Picture/CB MKII/render/CB5 MKII/CB5MKII new AF + dolly.1.png",
+    "score": 506,
+    "name": "Carbon MarkII"
+  },
+  "CB8MK2": {
+    "file": "assets/product-images/CB8MK2.jpg",
+    "source": "2. 产品图片Product Picture/CB MKII/render/CB8 MKII Transparency/CB8 MKII Transparentcy 常规版.1.png",
+    "score": 387,
+    "name": "Carbon MarkII"
+  },
+  "GP2.6": {
+    "file": "assets/product-images/GP2.6.jpg",
+    "source": "2. 产品图片Product Picture/Graphite/GP2.6 triangle/GP triangle panel_real shot/17260177647413.png",
+    "score": 260,
+    "name": "Graphite"
+  },
+  "GP3.1": {
+    "file": "assets/product-images/GP3.1.jpg",
+    "source": "2. 产品图片Product Picture/Graphite/Renders/GP 20240903/GP full panel 20240911/GP 20240903.1.png",
+    "score": 197,
+    "name": "Graphite"
+  },
+  "GP3.9": {
+    "file": "assets/product-images/GP3.9.jpg",
+    "source": "2. 产品图片Product Picture/Graphite/Renders/GP 20240903/GP full panel 20240911/GP 20240903.1.png",
+    "score": 197,
+    "name": "Graphite"
+  },
+  "JDO3.9": {
+    "file": "assets/product-images/JDO3.9.jpg",
+    "source": "2. 产品图片Product Picture/Jade/Jade Outdoor 3.9/JDO3.920250717.87.png",
+    "score": 230,
+    "name": "Jade"
+  },
+  "JDO5.9": {
+    "file": "assets/product-images/JDO5.9.jpg",
+    "source": "2. 产品图片Product Picture/Jade/Jade O Full 20240716.51 1.png",
+    "score": 104,
+    "name": "Jade"
+  },
+  "JDI5.9": {
+    "file": "assets/product-images/JDI5.9.jpg",
+    "source": "2. 产品图片Product Picture/Jade/Jade O Full 20240716.51 1.png",
+    "score": 104,
+    "name": "Jade"
+  },
+  "V8T GOB": {
+    "file": "assets/product-images/V8T_GOB.jpg",
+    "source": "2. 产品图片Product Picture/Vanish/Aging/V8T/GOB/DSC07431.JPG",
+    "score": 338,
+    "name": "Vanish"
+  },
+  "V4ST": {
+    "file": "assets/product-images/V4ST.jpg",
+    "source": "2. 产品图片Product Picture/VST/new 20241105/V4ST V6ST/V8T VST 20241105.2.png",
+    "score": 237,
+    "name": "Vanish ST"
+  },
+  "V6ST": {
+    "file": "assets/product-images/V6ST.jpg",
+    "source": "2. 产品图片Product Picture/VST/new 20241105/V4ST V6ST/V8T VST 20241105.2.png",
+    "score": 237,
+    "name": "Vanish ST"
+  },
+  "V5SMK2": {
+    "file": "assets/product-images/V5SMK2.jpg",
+    "source": "2. 产品图片Product Picture/Vanish/Renders/V5SMKII/V5S MKII 20240222.1.png",
+    "score": 528,
+    "name": "Vanish"
+  },
+  "V8SMK2": {
+    "file": "assets/product-images/V8SMK2.jpg",
+    "source": "2. 产品图片Product Picture/Vanish/Renders/V8SMKII/V8S MKII 20240221.1.png",
+    "score": 528,
+    "name": "Vanish"
+  },
+  "BM2-PC Matte": {
+    "file": "assets/product-images/BM2-PC_Matte.jpg",
+    "source": "2. 产品图片Product Picture/Black Marble/BM4/Renders/BM 4 feature V2.jpg",
+    "score": 405,
+    "name": "Black Marble"
+  },
+  "BM4-Glass": {
+    "file": "assets/product-images/BM4-Glass.jpg",
+    "source": "2. 产品图片Product Picture/Black Marble/BM4/Renders/BM 4 feature V2.jpg",
+    "score": 396,
+    "name": "Black Marble"
+  },
+  "BM4-Matte": {
+    "file": "assets/product-images/BM4-Matte.jpg",
+    "source": "2. 产品图片Product Picture/Black Marble/BM4/Renders/BM4 Metal Module 20220729/BM4 matte.116.png",
+    "score": 496,
+    "name": "Black Marble"
+  },
+  "VAI6": {
+    "file": "assets/product-images/VAI6.jpg",
+    "source": "2. 产品图片Product Picture/Vanish Air Rental/VAO newtrik.483.png",
+    "score": 250,
+    "name": "Vanish Air"
+  },
+  "VAO6": {
+    "file": "assets/product-images/VAO6.jpg",
+    "source": "2. 产品图片Product Picture/Vanish Air Rental/VAO newtrik.483.png",
+    "score": 398,
+    "name": "Vanish Air"
+  },
+  "TPC1.9(4in1)": {
+    "file": "assets/product-images/TPC1.9_4in1.jpg",
+    "source": "2. 产品图片Product Picture/Topaz/Topaz-B/Topaz cube 20230825.bip.1.png",
+    "score": 299,
+    "name": "Topaz-C"
+  },
+  "TPC2.6": {
+    "file": "assets/product-images/TPC2.6.jpg",
+    "source": "2. 产品图片Product Picture/Topaz/Topaz-B/Topaz cube 20230825.bip.1.png",
+    "score": 299,
+    "name": "Topaz-C"
+  },
+  "OB2.6": {
+    "file": "assets/product-images/OB2.6.jpg",
+    "source": "2. 产品图片Product Picture/Graphite/Renders/GP 20240903/GP full panel 20240911/GP 20240903.1.png",
+    "score": 74,
+    "name": "Obsidian"
+  },
+  "BM5i": {
+    "file": "assets/product-images/BM5i.jpg",
+    "source": "2. 产品图片Product Picture/Black Marble/BM5/Renders/BM5 2019.07.15/BM5_Renders_1.png",
+    "score": 371,
+    "name": "Black Marble"
+  },
+  "BM5-Glass": {
+    "file": "assets/product-images/BM5-Glass.jpg",
+    "source": "2. 产品图片Product Picture/Black Marble/BM5/Renders/BM5 2019.07.15/BM5_Renders_1.png",
+    "score": 371,
+    "name": "Black Marble"
+  },
+  "EM3.9": {
+    "file": "assets/product-images/EM3.9.jpg",
+    "source": "2. 产品图片Product Picture/Emerald/EM mock up VS+.png",
+    "score": 132,
+    "name": "Emerald"
+  },
+  "EM5.9": {
+    "file": "assets/product-images/EM5.9.jpg",
+    "source": "2. 产品图片Product Picture/Emerald/EM mock up VS+.png",
+    "score": 132,
+    "name": "Emerald"
+  },
+  "EM8.9": {
+    "file": "assets/product-images/EM8.9.jpg",
+    "source": "2. 产品图片Product Picture/Emerald/EM mock up VS+.png",
+    "score": 132,
+    "name": "Emerald"
+  },
+  "Voyager6": {
+    "file": "assets/product-images/Voyager6.jpg",
+    "source": "2. 产品图片Product Picture/ArtMorph/ArtMorph 20241115/ArtMorph full panel/ArtMorph 20241115.1.png",
+    "score": 256,
+    "name": "Voyager"
+  }
+}
