@@ -877,11 +877,12 @@ function wirePoint(item, cellW, cellH, gap, mode, direction, lane) {
     const cx = left + cellW / 2;
     const cy = top + cellH / 2;
     const sideLane = mode === "power" ? -lane : lane;
+    const horizontalRatio = mode === "power" ? .48 : .52;
     return {
         r: item.r,
         c: item.c,
         x: direction === "vertical" ? cx + sideLane : cx,
-        y: direction === "vertical" ? cy : cy + sideLane,
+        y: direction === "vertical" ? cy : top + cellH * horizontalRatio,
         box
     };
 }
@@ -896,7 +897,7 @@ function renderWireSvg(matrix, mode, cellW, cellH, gap) {
             const a = points[i - 1], b = points[i];
             const p1 = wirePoint(a, cellW, cellH, gap, mode, direction, lane);
             const p2 = wirePoint(b, cellW, cellH, gap, mode, direction, lane);
-            const d = routedWirePath(p1, p2, direction, mode === "power" ? -lane : lane);
+            const d = routedWirePath(p1, p2, direction, 0);
             paths.push(`<path d="${d}" stroke="${color}" stroke-width="${mode === "power" ? 2 : 1.7}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`);
         }
     });
@@ -936,7 +937,7 @@ function renderBoard(targetId, mode) {
                     ? `background:${powerMappingTone(cell.powerLabel).fill};border-color:${powerMappingTone(cell.powerLabel).border};`
                     : `background:${topologyFill(displayMatrix, cell)};border-color:${dataBorderColor("dark")};`
                 : "";
-            html += `<div class="cab ${klass}" style="width:${cellW}px;height:${cellH}px;font-size:${Math.max(4, Math.min(6.5, cellW * .17))}px;${colorStyle}">${escapeHtml(label || (fallbackStart ? (mode === "power" ? `P${fallbackLinear + 1}` : `D${fallbackLinear + 1}`) : ""))}</div>`;
+            html += `<div class="cab ${klass}" style="width:${cellW}px;height:${cellH}px;font-size:${Math.max(8, Math.min(10, cellW * .24))}px;${colorStyle}">${escapeHtml(label || (fallbackStart ? (mode === "power" ? `P${fallbackLinear + 1}` : `D${fallbackLinear + 1}`) : ""))}</div>`;
         }
     }
     html += "</div></div>";
@@ -1261,7 +1262,7 @@ function appendixMatrixSvg(mode) {
     const rowHeights = rowRatios.map(ratio => ratio * cellW);
     const gridW = cols * cellW;
     const gridH = rowHeights.reduce((sum, value) => sum + value, 0);
-    const labelFontSize = Math.max(5.5, Math.min(10, cellW * 0.28));
+    const labelFontSize = Math.max(8, Math.min(13, cellW * 0.34));
     const viewW = gridW + pad * 2;
     const viewH = titleH + pad + gridH + pad;
     const startX = pad;
@@ -1298,7 +1299,7 @@ function appendixMatrixSvg(mode) {
             };
             rects.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${cellW.toFixed(2)}" height="${h.toFixed(2)}" rx="2" fill="${fill}" stroke="${stroke}" stroke-width=".8"/>`);
             const text = isPowerOnly ? cell.powerLabel : cell.portLabel;
-            labels.push(`<text x="${(x + cellW / 2).toFixed(2)}" y="${(y + h / 2 + labelFontSize * .3).toFixed(2)}" text-anchor="middle" font-size="${labelFontSize.toFixed(1)}" font-weight="700" fill="#0f172a">${escapeHtml(text || "")}</text>`);
+            labels.push(`<text x="${(x + cellW / 2).toFixed(2)}" y="${(y + h / 2 + labelFontSize * .3).toFixed(2)}" text-anchor="middle" font-size="${labelFontSize.toFixed(1)}" font-weight="800" fill="#ffffff">${escapeHtml(text || "")}</text>`);
         }
     }
     // Render cable paths - for "both" mode, draw power AND data cables
@@ -1313,9 +1314,10 @@ function appendixMatrixSvg(mode) {
                 const bBox = boxes[points[i].r]?.[points[i].c];
                 if (!aBox || !bBox) continue;
                 const sideLane = laneSign * lane;
-                const a = { x: direction === "vertical" ? aBox.cx + sideLane : aBox.cx, y: direction === "vertical" ? aBox.cy : aBox.cy + sideLane, r: aBox.r, c: aBox.c, box: aBox.box };
-                const b = { x: direction === "vertical" ? bBox.cx + sideLane : bBox.cx, y: direction === "vertical" ? bBox.cy : bBox.cy + sideLane, r: bBox.r, c: bBox.c, box: bBox.box };
-                allPaths.push(`<path d="${routedWirePath(a, b, direction, sideLane)}" fill="none" stroke="${stroke}" stroke-width="${cableMode === "power" ? 2.4 : 2}" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>`);
+                const horizontalRatio = cableMode === "power" ? .48 : .52;
+                const a = { x: direction === "vertical" ? aBox.cx + sideLane : aBox.cx, y: direction === "vertical" ? aBox.cy : aBox.box.top + aBox.box.height * horizontalRatio, r: aBox.r, c: aBox.c, box: aBox.box };
+                const b = { x: direction === "vertical" ? bBox.cx + sideLane : bBox.cx, y: direction === "vertical" ? bBox.cy : bBox.box.top + bBox.box.height * horizontalRatio, r: bBox.r, c: bBox.c, box: bBox.box };
+                allPaths.push(`<path d="${routedWirePath(a, b, direction, 0)}" fill="none" stroke="${stroke}" stroke-width="${cableMode === "power" ? 2.4 : 2}" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>`);
             }
         });
     };
@@ -1356,7 +1358,7 @@ function appendixProcessorSvg(page) {
     const rowHeights = rowRatios.map(ratio => number(ratio, 1) * cellW);
     const gridW = cols * cellW;
     const gridH = rowHeights.reduce((sum, value) => sum + value, 0);
-    const labelFontSize = Math.max(5.5, Math.min(10, cellW * 0.28));
+    const labelFontSize = Math.max(8, Math.min(13, cellW * 0.34));
     const viewW = gridW + pad * 2;
     const viewH = titleH + pad + gridH + pad;
     const startX = pad;
@@ -1378,7 +1380,7 @@ function appendixProcessorSvg(page) {
             boxes[r][c] = { x, y, w: cellW, h, cx: x + cellW / 2, cy: y + h / 2, r, c, item };
             rects.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${cellW.toFixed(2)}" height="${h.toFixed(2)}" rx="2" fill="${item ? controllerFill(cid, .28) : "#f8fafc"}" stroke="${item ? controllerStroke(cid) : "#d8e0eb"}" stroke-width=".7"/>`);
             if (item?.cell?.portLabel) {
-                labels.push(`<text x="${(x + cellW / 2).toFixed(2)}" y="${(y + h / 2 + labelFontSize * .3).toFixed(2)}" text-anchor="middle" font-size="${labelFontSize.toFixed(1)}" font-weight="700" fill="#0f172a">${escapeHtml(item.cell.portLabel)}</text>`);
+                labels.push(`<text x="${(x + cellW / 2).toFixed(2)}" y="${(y + h / 2 + labelFontSize * .3).toFixed(2)}" text-anchor="middle" font-size="${labelFontSize.toFixed(1)}" font-weight="800" fill="#ffffff">${escapeHtml(item.cell.portLabel)}</text>`);
             }
         }
     }

@@ -89,12 +89,12 @@
             box-shadow:0 2px 5px rgba(0,0,0,0.3);
         }
         .power-text { 
-            color:#ff7e6e; font-size:8px; font-weight:bold; letter-spacing:0.2px;
-            background:rgba(0,0,0,0.52); padding:0 2px; border-radius:3px; text-shadow:0 0 1px black;
+            color:#fff; font-size:10px; font-weight:800; letter-spacing:0.2px;
+            background:transparent; padding:0; border-radius:0; text-shadow:0 0 1px black;
         }
         .port-text { 
-            color:#6bc8ff; font-size:8px; font-weight:bold; letter-spacing:0.2px;
-            background:rgba(0,0,0,0.52); padding:0 2px; border-radius:3px; text-shadow:0 0 1px black;
+            color:#fff; font-size:10px; font-weight:800; letter-spacing:0.2px;
+            background:transparent; padding:0; border-radius:0; text-shadow:0 0 1px black;
         }
         .power-text, .port-text { white-space:nowrap; word-break:keep-all; line-height:1; }
         .controller-text {
@@ -159,7 +159,7 @@
         input { background:#ffffff; border-color:#cbd5e1; color:#111827; }
         .toggle-item { color:#1f2937; background:rgba(14,165,233,0.08); }
         .power-text,
-        .port-text,
+        .port-text { background:transparent; padding:0; border-radius:0; box-shadow:none; text-shadow:none; }
         .controller-text { background:rgba(255,255,255,0.86); text-shadow:none; }
         .canvas-card-stage { background:#ffffff; border-color:#111827; }
         .canvas-load-frame { display:none; }
@@ -184,9 +184,9 @@
         .pdf-tile-visual { margin:0 auto; }
         .pdf-tile-visual .cab-module { box-shadow:none; }
         .pdf-tile-visual .power-text,
-        .pdf-tile-visual .port-text { font-size:8px; padding:0 2px; border-radius:3px; }
+        .pdf-tile-visual .port-text { font-size:10px; padding:0; border-radius:0; background:transparent; color:#fff; }
 
-        .power-matrix-visual .power-text { font-size:9px; font-weight:800; letter-spacing:0; padding:0 2px; color:#ff4f3d; background:rgba(255,255,255,0.9); border:0; border-radius:3px; text-shadow:none; box-shadow:none; }
+        .power-matrix-visual .power-text { font-size:10px; font-weight:800; letter-spacing:0; padding:0; color:#fff; background:transparent; border:0; border-radius:0; text-shadow:none; box-shadow:none; }
         .power-matrix-visual .cab-module { justify-content:center; }
         body.embedded-report { padding:0; background:transparent; overflow:hidden; }
         body.embedded-report .design-dashboard { display:block; }
@@ -1636,7 +1636,6 @@ function drawCablingLines() {
                 height: elementRect.height
             };
             const laneX = elementRect.width * 0.12;
-            const laneY = elementRect.height * 0.12;
             
             // 竖向：电源左/网线右，同高；横向：电源上/网线下，同X
             const isVert = direction === 'vertical';
@@ -1644,13 +1643,13 @@ function drawCablingLines() {
             if (pMatch) {
                 let id = pMatch[1], seq = parseInt(pMatch[2]);
                 if (!powerGroups[id]) powerGroups[id] = [];
-                powerGroups[id].push({ seq, x: isVert ? cx - laneX : cx, y: isVert ? cy : cy - laneY, r: r, c: c, box });
+                powerGroups[id].push({ seq, x: isVert ? cx - laneX : cx, y: isVert ? cy : top + elementRect.height * 0.48, r: r, c: c, box });
             }
             let dMatch = cell.portLabel.match(/D(\d+)-(\d+)/);
             if (dMatch) {
                 let id = `M${cell.controllerId || 1}-D${dMatch[1]}`, seq = parseInt(dMatch[2]);
                 if (!portGroups[id]) portGroups[id] = [];
-                portGroups[id].push({ seq, x: isVert ? cx + laneX : cx, y: isVert ? cy : cy + laneY, r: r, c: c, box });
+                portGroups[id].push({ seq, x: isVert ? cx + laneX : cx, y: isVert ? cy : top + elementRect.height * 0.52, r: r, c: c, box });
             }
         }
     }
@@ -2176,8 +2175,8 @@ function adaptiveMatrixLabelPx(matrix, label, cellWidth, cellHeight, maxSize = 8
     const cols = matrix[0]?.length || 1;
     const density = Math.max(1, resolution.width / 1920, resolution.height / 1080, cols / 12, rows / 8);
     const byWidth = (cellWidth * 0.78) / Math.max(1, String(label || "").length * 0.62);
-    const byHeight = cellHeight * 0.18;
-    return Math.max(0.8, Math.min(maxSize / Math.sqrt(density), byWidth, byHeight));
+    const byHeight = cellHeight * 0.34;
+    return Math.max(3, Math.min((maxSize * 1.35) / Math.pow(density, 0.25), byWidth, byHeight));
 }
 
 function matrixVisualCellWidth(cols) {
@@ -2309,7 +2308,7 @@ function drawPowerMappingLines() {
             groups[id].push({
                 seq: parseInt(match[2], 10),
                 x: left + elementRect.width / 2,
-                y: top + elementRect.height / 2,
+                y: direction === 'horizontal' ? top + elementRect.height * 0.48 : top + elementRect.height / 2,
                 r,
                 c,
                 box: {
@@ -2882,7 +2881,7 @@ function drawPdfTileLines(tile, matrix, mode) {
                 groupsPower[id].push({
                     seq: parseInt(powerMatch[2], 10),
                     x: mode === 'power' ? cx : direction === 'vertical' ? cx - 12 : cx,
-                    y: mode === 'power' ? cy : direction === 'vertical' ? cy : cy - 8,
+                    y: direction === 'horizontal' ? box.top + box.height * 0.48 : cy,
                     r, c, box
                 });
             }
@@ -2891,7 +2890,7 @@ function drawPdfTileLines(tile, matrix, mode) {
                 if (dataMatch) {
                     const id = `D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
-                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + 12 : cx, y: direction === 'vertical' ? cy : cy + 8, r, c, box });
+                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + 12 : cx, y: direction === 'vertical' ? cy : box.top + box.height * 0.52, r, c, box });
                 }
             }
         }
@@ -3189,15 +3188,10 @@ function pdfSetColor(pdf, method, color, fallback) {
     return true;
 }
 
-function pdfDrawBadgeText(pdf, text, x, y, fontPt, textColor, fillColor, fontStyle = 'normal') {
+function pdfDrawBadgeText(pdf, text, x, y, fontPt, textColor, fontStyle = 'normal') {
     const label = (text || '').toString();
     pdf.setFont('helvetica', fontStyle);
     pdf.setFontSize(fontPt);
-    const textWidth = pdf.getTextWidth(label);
-    const padX = Math.max(0.28, fontPt * 0.07);
-    const padY = Math.max(0.12, fontPt * 0.025);
-    pdfSetColor(pdf, 'setFillColor', fillColor || '#ffffff', [255, 255, 255]);
-    pdf.roundedRect(x - textWidth / 2 - padX, y - fontPt * 0.27 - padY, textWidth + padX * 2, fontPt * 0.35 + padY * 2, 0.35, 0.35, 'F');
     pdfSetColor(pdf, 'setTextColor', textColor, [17, 24, 39]);
     pdf.text(label, x, y, { align: 'center', baseline: 'middle' });
 }
@@ -3229,14 +3223,14 @@ function pdfAdaptiveLabelFont(pdf, matrix, text, box, preferredPt, heightFractio
     const rows = matrix?.length || 1;
     const cols = matrix?.[0]?.length || 1;
     const density = Math.max(1, resolution.width / 1920, resolution.height / 1080, cols / 12, rows / 8);
-    let size = preferredPt / Math.sqrt(density);
+    let size = (preferredPt * 1.35) / Math.pow(density, 0.25);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(size);
     const textWidth = Math.max(0.01, pdf.getTextWidth(String(text || '')));
     const widthScale = (box.width * 0.76) / textWidth;
     const maxByHeight = box.height * heightFraction * 2.834;
     size = Math.min(size, size * widthScale, maxByHeight);
-    return Math.max(0.35, size);
+    return Math.max(1.2, size);
 }
 
 function pdfGetMatrixLayout(matrix, x, y, w, h) {
@@ -3570,7 +3564,7 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 groupsPower[id].push({
                     seq: parseInt(powerMatch[2], 10),
                     x: mode === 'power' ? cx : direction === 'vertical' ? cx - box.width * 0.18 : cx,
-                    y: mode === 'power' ? cy : direction === 'vertical' ? cy : cy - box.height * 0.18,
+                    y: direction === 'horizontal' ? box.top + box.height * 0.48 : cy,
                     r, c, box
                 });
             }
@@ -3579,7 +3573,7 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 if (dataMatch) {
                     const id = `D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
-                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + box.width * 0.18 : cx, y: direction === 'vertical' ? cy : cy + box.height * 0.18, r, c, box });
+                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + box.width * 0.18 : cx, y: direction === 'vertical' ? cy : box.top + box.height * 0.52, r, c, box });
                 }
             }
             labels.push({ cell, x: cx, y: cy, box });
@@ -3606,13 +3600,13 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
     labels.forEach(({ cell, x, y, box }) => {
         if (mode === 'power') {
             const font = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.powerLabel, box, 5, 0.32);
-            pdfDrawBadgeText(pdf, cell.powerLabel, x, y + font * 0.02, font, '#ff4f3d', '#ffffff', 'normal');
+            pdfDrawBadgeText(pdf, cell.powerLabel, x, y + font * 0.02, font, '#ffffff', 'bold');
         } else {
             const gap = Math.max(1.25, box.height * 0.14);
             const powerFont = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.powerLabel, box, 4.4, 0.2);
             const portFont = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.portLabel, box, 4.4, 0.2);
-            pdfDrawBadgeText(pdf, cell.powerLabel, x, y - gap, powerFont, '#ff4f3d', '#ffffff', 'normal');
-            pdfDrawBadgeText(pdf, cell.portLabel, x, y + gap, portFont, '#1e9bff', '#ffffff', 'normal');
+            pdfDrawBadgeText(pdf, cell.powerLabel, x, y - gap, powerFont, '#ffffff', 'bold');
+            pdfDrawBadgeText(pdf, cell.portLabel, x, y + gap, portFont, '#ffffff', 'bold');
         }
     });
 }
@@ -3785,7 +3779,7 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
 
     labels.forEach(item => {
         const fontSize = pdfAdaptiveLabelFont(pdf, lastMatrix, item.label, item.box, 4.8, 0.3);
-        pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#1e9bff', '#ffffff', 'normal');
+        pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#ffffff', 'bold');
     });
 }
 
