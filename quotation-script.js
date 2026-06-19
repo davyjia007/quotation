@@ -170,7 +170,7 @@ function applyPowerCategoryRules() {
     }
     select.disabled = locked;
     const directionLabel = select.closest(".field")?.querySelector("label");
-    if (directionLabel) directionLabel.textContent = locked ? "Wiring Direction (Locked)" : "Wiring Direction";
+    if (directionLabel) directionLabel.textContent = "Wiring Direction";
 
     const existingCurrents = [...currentSelect.options].map(option => Number(option.value));
     if (existingCurrents.join("|") !== allowedCurrents.join("|")) {
@@ -181,7 +181,7 @@ function applyPowerCategoryRules() {
     }
     currentSelect.disabled = currentLocked;
     const currentLabel = currentSelect.closest(".field")?.querySelector("label");
-    if (currentLabel) currentLabel.textContent = currentLocked ? "Current (Locked)" : "Current";
+    if (currentLabel) currentLabel.textContent = "Current";
     powerRuleCategory = categoryKey;
 }
 function applyProcessingRouteRules(forceDefault = false) {
@@ -200,7 +200,7 @@ function applyProcessingRouteRules(forceDefault = false) {
     if (forceDefault || locked || !["vertical", "horizontal"].includes(select.value)) select.value = defaultValue;
     select.disabled = locked;
     const label = select.closest(".field")?.querySelector("label");
-    if (label) label.textContent = locked ? "Wiring Method (Locked)" : "Wiring Method";
+    if (label) label.textContent = "Wiring Method";
     const powerSelect = $("powerRouteSelect");
     if (powerSelect && powerSelect.value !== select.value) powerSelect.value = select.value;
 }
@@ -747,7 +747,8 @@ function populateBandwidth(preferHighest = false) {
         .filter(row => compact(row[F.system]) === system)
         .map(row => compact(row[F.bandwidth]))
         .filter(Boolean));
-    let values = new Set([...processorValues].filter(value => !screenValues.size || screenValues.has(value)));
+    const screenMax = Math.max(...[...screenValues].map(bandwidthScore), 0);
+    let values = new Set([...processorValues].filter(value => !screenMax || bandwidthScore(value) <= screenMax));
     if (!values.size) values = processorValues.size ? processorValues : screenValues;
     if (state.category === "CecoCeco") values = new Set(["1G"]);
     if (!values.size) values.add("1G");
@@ -765,6 +766,7 @@ function selectedProcessorRow() {
     return processingRows(isMainProcessorRow).find(row => processingRowKey(row) === key);
 }
 function processorCanvasKey(row = selectedProcessorRow()) {
+    if (/^s8$/i.test(compact(row?.[F.model]))) return "2K";
     const key = compact(row?.[F.productName]).toUpperCase();
     return ["2K", "4K", "8K"].includes(key) ? key : "4K";
 }
@@ -820,14 +822,14 @@ function populateFiberBoxOptions(preferDefault = false) {
     const previous = select.value;
     const seen = new Set();
     const boxes = processingRows(isFiberBoxRow)
+        .filter(row => compact(row[F.system]) === system)
         .filter(row => compact(row[F.bandwidth]) === bandwidth)
         .filter(row => {
             const key = processingRowKey(row);
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
-        })
-        .sort((a, b) => Number(compact(b[F.system]) === system) - Number(compact(a[F.system]) === system));
+        });
     const required = mode === "fiber";
     const hidden = mode === "rj45" || !boxes.length;
     field.hidden = hidden;
@@ -840,8 +842,7 @@ function populateFiberBoxOptions(preferDefault = false) {
     const validPrevious = [...select.options].some(option => option.value === previous);
     if (!preferDefault && validPrevious) select.value = previous;
     else {
-        const preferred = boxes.find(row => compact(row[F.system]) === system) || boxes[0];
-        select.value = processingRowKey(preferred);
+        select.value = processingRowKey(boxes[0]);
     }
     field.querySelector("label").textContent = required ? "Fiber Box (Required)" : "Fiber Box";
 }
