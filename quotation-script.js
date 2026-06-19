@@ -184,6 +184,26 @@ function applyPowerCategoryRules() {
     if (currentLabel) currentLabel.textContent = currentLocked ? "Current (Locked)" : "Current";
     powerRuleCategory = categoryKey;
 }
+function applyProcessingRouteRules(forceDefault = false) {
+    const select = $("dataRouteSelect");
+    if (!select) return;
+    const cat = categoryInfo();
+    const source = sourceCategory(cat);
+    let defaultValue = "vertical";
+    let locked = false;
+    if (source === "Rental") {
+        defaultValue = "vertical";
+        locked = true;
+    } else if (source === "Fixed Install" || cat.id === "Fixed Install") {
+        defaultValue = "horizontal";
+    }
+    if (forceDefault || locked || !["vertical", "horizontal"].includes(select.value)) select.value = defaultValue;
+    select.disabled = locked;
+    const label = select.closest(".field")?.querySelector("label");
+    if (label) label.textContent = locked ? "Wiring Method (Locked)" : "Wiring Method";
+    const powerSelect = $("powerRouteSelect");
+    if (powerSelect && powerSelect.value !== select.value) powerSelect.value = select.value;
+}
 function categoryImage() { return categoryInfo().image; }
 function safeModelFile(model) { return String(model || "").replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+|_+$/g, "") || "product"; }
 function productImage(model = state.model) {
@@ -246,8 +266,8 @@ function selectProductMatch(match) {
     $("productSearchInput").value = match.model;
     $("productSuggestions").classList.remove("active");
     populateSystems();
-    populateBandwidth();
-    applyDefaultProcessingCanvas();
+    populateBandwidth(true);
+    applyDefaultProcessingCanvas(true);
     syncAreaFromGrid();
     renderAll();
 }
@@ -454,9 +474,26 @@ function addItem(map, item) {
     else map.set(item.key, item);
 }
 function processorRows() {
-    const system = $("systemSelect").value;
-    const bandwidth = $("bandwidthSelect").value;
-    return state.rows.filter(isProcessor).filter(row => row[F.system] === system && (!row[F.bandwidth] || row[F.bandwidth] === bandwidth));
+    const selected = selectedProcessorRow();
+    return selected ? [selected] : [];
+}
+function ratioCapacity(row) {
+    const match = compact(row?.[F.ratio]).match(/\/\s*(\d+(?:\.\d+)?)/);
+    return match ? Math.max(1, Math.floor(number(match[1], 1))) : 0;
+}
+function fiberBoxQuantity() {
+    const row = selectedFiberBoxRow();
+    if (!row) return 0;
+    const capacity = ratioCapacity(row);
+    if (!capacity) return 0;
+    const pages = state.mappingReport?.processorPages;
+    if (Array.isArray(pages) && pages.length) {
+        return pages.reduce((sum, page) => sum + Math.ceil(Math.max(0, number(page.portCount, 0)) / capacity), 0);
+    }
+    return Math.ceil(Math.max(0, getStatNumber("Main Data", 0)) / capacity);
+}
+function selectedCableRow(pattern) {
+    return productRows().find(row => materialCategory(row) === "Cables" && pattern.test(compact(row[F.materialName])));
 }
 function computeItems() {
     const map = new Map();
@@ -477,38 +514,52 @@ function computeItems() {
         });
     });
     const processors = Math.max(1, getStatNumber("Processors", state.mappingReport?.controllerCount || 1));
-    const mainProcessor = processorRows()[0];
+    const mainProcessor = selectedProcessorRow();
+    const processorModel = compact(mainProcessor?.[F.model]) || `${$("systemSelect").value} Processor`;
     addItem(map, {
         section: "Processor",
-        title: englishName(mainProcessor, `${$("systemSelect").value} Processor`),
-        desc: englishDescription(mainProcessor, `${$("bitRateSelect").selectedOptions[0]?.textContent || ""}, ${$("canvasSelect").value} master canvas`),
+        title: processorModel,
+        desc: englishDescription(mainProcessor, `${$("systemSelect").value} ${$("bandwidthSelect").value}, ${$("bitRateSelect").selectedOptions[0]?.textContent || ""}, ${processorCanvasKey(mainProcessor)} processor`),
         qty: processors,
         unit: "pcs",
         sort: 20,
-        key: `processor|${mainProcessor?.[F.sap] || $("systemSelect").value}|${$("canvasSelect").value}`,
+        key: `processor|${mainProcessor?.[F.sap] || processorModel}|${$("bandwidthSelect").value}`,
         price: mainProcessor?.[F.price],
         sap: mainProcessor?.[F.sap] || ""
     });
-    processorRows().filter(row => row !== mainProcessor).slice(0, 1).forEach(row => addItem(map, {
+    const fiberRow = selectedFiberBoxRow();
+    const fiberQty = fiberBoxQuantity();
+    if (fiberRow && fiberQty) addItem(map, {
         section: "Processor",
-        title: englishName(row, "Fiber Distribution Box"),
-        desc: englishDescription(row, "Fiber distribution for processor outputs"),
-        qty: processors,
+        title: `${compact(fiberRow[F.model])} Fiber Box`,
+        desc: englishDescription(fiberRow, `${$("bandwidthSelect").value} fiber distribution, ${ratioCapacity(fiberRow)} ports per box`),
+        qty: fiberQty,
         unit: "pcs",
         sort: 21,
-        key: `processor-extra|${row[F.sap]}`,
-        price: row[F.price],
-        sap: row[F.sap] || ""
-    }));
+        key: `fiber-box|${fiberRow[F.sap] || fiberRow[F.model]}|${$("bandwidthSelect").value}`,
+        price: fiberRow[F.price],
+        sap: fiberRow[F.sap] || ""
+    });
     [
-        ["Main Power Cable", "Power feed cable from distribution to display", "Main Power", 30],
+        ["Main Power Cable", "Power feed cable from distribution to display", "Main Power", 30, /主电源线|main power cable/i],
         ["Power Jumper Cable", "Cabinet to cabinet power jumper", "Power Jumpers", 31],
-        ["Main Data Cable", "Processor output cable to display", "Main Data", 33],
+        ["Main Data Cable", "Processor output cable to display", "Main Data", 33, /主网线|main data cable/i],
         ["Short Data Cable", "Cabinet to cabinet data cable", "Short Data", 34],
         ["Data Extension Jumper", "Data jumper between rows or separated cabinet groups", "Data Jumpers", 35]
-    ].forEach(([title, desc, statKey, sort]) => addItem(map, {
-        section: "Cables", title, desc, qty: getStatNumber(statKey, 0), unit: "pcs", sort, key: `cable|${title}`
-    }));
+    ].forEach(([title, desc, statKey, sort, pattern]) => {
+        const row = pattern ? selectedCableRow(pattern) : null;
+        addItem(map, {
+            section: "Cables",
+            title,
+            desc: englishDescription(row, desc),
+            qty: getStatNumber(statKey, 0),
+            unit: "pcs",
+            sort,
+            key: `cable|${title}|${row?.[F.sap] || "default"}`,
+            price: row?.[F.price],
+            sap: row?.[F.sap] || ""
+        });
+    });
     const totalUnits = equivalentUnits();
     selectedRows().forEach(row => {
         const free = isFreeSpare(row);
@@ -566,8 +617,8 @@ function renderCategories() {
         state.panelQtyTouched.clear();
         ensureModelSelection();
         populateSystems();
-        populateBandwidth();
-        applyDefaultProcessingCanvas();
+        populateBandwidth(true);
+        applyDefaultProcessingCanvas(true);
         syncGridFromArea();
         renderAll();
     }));
@@ -594,8 +645,8 @@ function renderModels() {
         state.model = btn.dataset.model;
         state.panelQtyTouched.clear();
         populateSystems();
-        populateBandwidth();
-        applyDefaultProcessingCanvas();
+        populateBandwidth(true);
+        applyDefaultProcessingCanvas(true);
         syncGridFromArea();
         renderAll();
     }));
@@ -653,32 +704,152 @@ function renderCabinetOptions() {
 }
 function populateSystems() {
     const systems = new Set();
+    if (state.category === "CecoCeco") systems.add("Nova");
     productRows().forEach(row => {
+        const sys = compact(row[F.system]);
+        if (validSystems.includes(sys)) systems.add(sys);
+    });
+    if (!systems.size) state.rows.filter(row => isMainProcessorRow(row)).forEach(row => {
         const sys = compact(row[F.system]);
         if (validSystems.includes(sys)) systems.add(sys);
     });
     if (!systems.size) systems.add("Nova");
     const previous = $("systemSelect").value;
     $("systemSelect").innerHTML = [...systems].map(sys => `<option value="${sys}">${sys}</option>`).join("");
-    if (systems.has(previous)) $("systemSelect").value = previous;
+    if (state.category === "CecoCeco" && systems.has("Nova")) $("systemSelect").value = "Nova";
+    else if (systems.has(previous)) $("systemSelect").value = previous;
     else if (systems.has("Nova")) $("systemSelect").value = "Nova";
 }
-function populateBandwidth() {
+function processorMaterialText(row) {
+    return `${compact(row?.[F.materialName])} ${compact(row?.[F.englishDesc])} ${compact(row?.[F.desc])}`.toLowerCase();
+}
+function isFiberBoxRow(row) {
+    const text = processorMaterialText(row);
+    return isProcessor(row) && (/光纤盒|data distributor|fiber switch|fiber box/.test(text));
+}
+function isMainProcessorRow(row) {
+    const text = processorMaterialText(row);
+    return isProcessor(row) && !isFiberBoxRow(row) && (/主控|processor|media player|switch\s*&/.test(text));
+}
+function processingRows(filterFn) {
+    return state.rows.filter(row => compact(row?.[F.productCategory]) === "Universal" && filterFn(row));
+}
+function bandwidthScore(value) {
+    return number(String(value || "").replace(/g/i, ""), 0);
+}
+function populateBandwidth(preferHighest = false) {
     const system = $("systemSelect").value;
-    const values = new Set();
+    const screenValues = new Set();
     productRows().forEach(row => {
-        if (row[F.system] === system && row[F.bandwidth]) values.add(row[F.bandwidth]);
+        if (compact(row[F.system]) === system && compact(row[F.bandwidth])) screenValues.add(compact(row[F.bandwidth]));
     });
-    if (system === "MVR" && values.has("2.5G")) values.add("1G");
-    if (system === "Nova" && values.has("5G")) values.add("1G");
+    const processorValues = new Set(processingRows(isMainProcessorRow)
+        .filter(row => compact(row[F.system]) === system)
+        .map(row => compact(row[F.bandwidth]))
+        .filter(Boolean));
+    let values = new Set([...processorValues].filter(value => !screenValues.size || screenValues.has(value)));
+    if (!values.size) values = processorValues.size ? processorValues : screenValues;
+    if (state.category === "CecoCeco") values = new Set(["1G"]);
     if (!values.size) values.add("1G");
     const previous = $("bandwidthSelect").value;
-    $("bandwidthSelect").innerHTML = [...values].map(value => `<option value="${value}">${value}</option>`).join("");
-    if (values.has(previous)) $("bandwidthSelect").value = previous;
+    const ordered = [...values].sort((a, b) => bandwidthScore(b) - bandwidthScore(a));
+    $("bandwidthSelect").innerHTML = ordered.map(value => `<option value="${value}">${value}</option>`).join("");
+    if (!preferHighest && values.has(previous)) $("bandwidthSelect").value = previous;
+    else $("bandwidthSelect").value = ordered[0];
 }
-function applyDefaultProcessingCanvas() {
-    if ($("canvasSelect")) $("canvasSelect").value = state.model === "AM6" ? "2K" : "4K";
-    if ($("bitRateSelect")) $("bitRateSelect").value = "10b60Hz";
+function processingRowKey(row) {
+    return [compact(row?.[F.sap]), compact(row?.[F.model]), compact(row?.[F.system]), compact(row?.[F.bandwidth])].join("|");
+}
+function selectedProcessorRow() {
+    const key = $("processorSelect")?.value || "";
+    return processingRows(isMainProcessorRow).find(row => processingRowKey(row) === key);
+}
+function processorCanvasKey(row = selectedProcessorRow()) {
+    const key = compact(row?.[F.productName]).toUpperCase();
+    return ["2K", "4K", "8K"].includes(key) ? key : "4K";
+}
+function populateProcessorOptions(prefer4K = false) {
+    const system = $("systemSelect").value;
+    const bandwidth = $("bandwidthSelect").value;
+    const previous = $("processorSelect").value;
+    let rows = processingRows(isMainProcessorRow).filter(row => compact(row[F.system]) === system && compact(row[F.bandwidth]) === bandwidth);
+    if (state.category === "CecoCeco") rows = rows.filter(row => compact(row[F.model]).toLowerCase() === "artmorph play");
+    const seen = new Set();
+    rows = rows.filter(row => {
+        const key = processingRowKey(row);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    }).sort((a, b) => {
+        const a4 = processorCanvasKey(a) === "4K" ? 0 : 1;
+        const b4 = processorCanvasKey(b) === "4K" ? 0 : 1;
+        return a4 - b4 || processorCanvasKey(b).localeCompare(processorCanvasKey(a)) || compact(a[F.model]).localeCompare(compact(b[F.model]));
+    });
+    $("processorSelect").innerHTML = rows.map(row => `<option value="${escapeHtml(processingRowKey(row))}">${escapeHtml(compact(row[F.model]))} (${processorCanvasKey(row)})</option>`).join("");
+    if (!prefer4K && rows.some(row => processingRowKey(row) === previous)) $("processorSelect").value = previous;
+    else {
+        const preferred = rows.find(row => processorCanvasKey(row) === "4K") || rows[0];
+        if (preferred) $("processorSelect").value = processingRowKey(preferred);
+    }
+    if ($("canvasSelect")) $("canvasSelect").value = processorCanvasKey();
+}
+function processorConnectionMode(row = selectedProcessorRow()) {
+    if (state.category === "CecoCeco") return "rj45";
+    const remark = compact(row?.[F.remark]).toLowerCase();
+    const fallback = `${compact(row?.[F.englishDesc])} ${compact(row?.[F.desc])}`.toLowerCase();
+    const source = /rj45|fiber|光纤/.test(remark) ? remark : fallback;
+    const rj45 = /rj45|网口/.test(source);
+    const fiber = /fiber|光纤|sfp/.test(source);
+    if (rj45 && fiber) return "optional";
+    if (rj45) return "rj45";
+    if (fiber) return "fiber";
+    return "auto";
+}
+function selectedFiberBoxRow() {
+    const key = $("fiberBoxSelect")?.value || "";
+    if (!key || key === "none") return null;
+    return processingRows(isFiberBoxRow).find(row => processingRowKey(row) === key) || null;
+}
+function populateFiberBoxOptions(preferDefault = false) {
+    const field = $("fiberBoxField");
+    const select = $("fiberBoxSelect");
+    if (!field || !select) return;
+    const bandwidth = $("bandwidthSelect").value;
+    const system = $("systemSelect").value;
+    const mode = processorConnectionMode();
+    const previous = select.value;
+    const seen = new Set();
+    const boxes = processingRows(isFiberBoxRow)
+        .filter(row => compact(row[F.bandwidth]) === bandwidth)
+        .filter(row => {
+            const key = processingRowKey(row);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        })
+        .sort((a, b) => Number(compact(b[F.system]) === system) - Number(compact(a[F.system]) === system));
+    const required = mode === "fiber";
+    const hidden = mode === "rj45" || !boxes.length;
+    field.hidden = hidden;
+    if (hidden) {
+        select.innerHTML = `<option value="none">Not Required (RJ45)</option>`;
+        return;
+    }
+    const noneOption = required ? "" : `<option value="none">Use RJ45 / No Fiber Box</option>`;
+    select.innerHTML = noneOption + boxes.map(row => `<option value="${escapeHtml(processingRowKey(row))}">${escapeHtml(compact(row[F.model]))} - ${escapeHtml(bandwidth)}</option>`).join("");
+    const validPrevious = [...select.options].some(option => option.value === previous);
+    if (!preferDefault && validPrevious) select.value = previous;
+    else {
+        const preferred = boxes.find(row => compact(row[F.system]) === system) || boxes[0];
+        select.value = processingRowKey(preferred);
+    }
+    field.querySelector("label").textContent = required ? "Fiber Box (Required)" : "Fiber Box";
+}
+function applyDefaultProcessingCanvas(preferDefaults = false) {
+    populateProcessorOptions(preferDefaults);
+    populateFiberBoxOptions(preferDefaults);
+    if ($("bitRateSelect") && preferDefaults) $("bitRateSelect").value = "10b60Hz";
+    applyProcessingRouteRules(preferDefaults);
 }
 function renderComparison() {
     const size = physicalSize();
@@ -889,7 +1060,7 @@ function wirePoint(item, cellW, cellH, gap, mode, direction, lane) {
 function renderWireSvg(matrix, mode, cellW, cellH, gap) {
     const groups = cableGroups(matrix, mode);
     const paths = [];
-    const direction = $("powerRouteSelect")?.value || "vertical";
+    const direction = mode === "data" ? ($("dataRouteSelect")?.value || "vertical") : ($("powerRouteSelect")?.value || "vertical");
     const lane = Math.min(11, Math.max(4, Math.min(cellW, cellH) * .22));
     Object.entries(groups).forEach(([groupId, points]) => {
         const color = mode === "power" ? powerStroke(points[0]?.run) : "#1e80ff";
@@ -929,7 +1100,8 @@ function renderBoard(targetId, mode) {
             const cell = matrixRows?.[r]?.[c];
             const label = mode === "power" ? cell?.powerLabel : cell ? (cell.portLabel || "") : "";
             const start = mode === "power" ? /P\d+-1$/.test(cell?.powerLabel || "") : /D\d+-1$/.test(cell?.portLabel || "");
-            const fallbackLinear = $("powerRouteSelect").value === "horizontal" ? r * cols + c : c * rows + r;
+            const routeSelect = mode === "data" ? $("dataRouteSelect") : $("powerRouteSelect");
+            const fallbackLinear = routeSelect.value === "horizontal" ? r * cols + c : c * rows + r;
             const fallbackStart = !cell && fallbackLinear < startCount;
             const klass = start || fallbackStart ? (mode === "power" ? "power-start" : "data-start") : "";
             const colorStyle = cell
@@ -989,7 +1161,7 @@ function renderProcessorCanvases() {
         const grid = `<div class="processor-mini-grid" style="grid-template-columns:repeat(${canvasCols}, ${cellW}px);">${items.join("")}</div>`;
         const used = page.actualPixelW && page.actualPixelH ? `${Math.round(page.actualPixelW)} x ${Math.round(page.actualPixelH)} px used` : `${page.portCount || 0} ports`;
         return `<article class="processor-canvas-card">
-            <h3>${escapeHtml($("systemSelect").value)} ${escapeHtml(page.title || `Processor ${page.displayIndex + 1}`)} / ${escapeHtml(canvas.key || $("canvasSelect").value)}</h3>
+            <h3>${escapeHtml(compact(selectedProcessorRow()?.[F.model]) || $("systemSelect").value)} - ${escapeHtml(page.title || `Processor ${page.displayIndex + 1}`)} / ${escapeHtml(canvas.key || $("canvasSelect").value)}</h3>
             <div class="processor-canvas-meta">${escapeHtml(canvas.width || "-")} x ${escapeHtml(canvas.height || "-")} px canvas / ${escapeHtml(used)}</div>
             <div class="processor-canvas-frame">${grid}</div>
         </article>`;
@@ -998,13 +1170,17 @@ function renderProcessorCanvases() {
 function renderProcessingPage() {
     const stats = mappingStats();
     const processorCount = Math.max(1, getStatNumber("Processors", state.mappingReport?.controllerCount || 1));
+    const processor = selectedProcessorRow();
+    const fiber = selectedFiberBoxRow();
     $("processingSummary").innerHTML = summaryCards([
-        [["Processor Model", $("systemSelect").value], ["Bandwidth", $("bandwidthSelect").value]],
-        [["Master Canvas", $("canvasSelect").value], ["Signal", $("bitRateSelect").selectedOptions[0]?.textContent || ""]],
+        [["Control System", $("systemSelect").value], ["Bandwidth", $("bandwidthSelect").value]],
+        [["Processor", compact(processor?.[F.model]) || "-"], ["Processor Type", processorCanvasKey(processor)]],
+        [["Fiber Box", fiber ? compact(fiber[F.model]) : "Not Required"], ["Fiber Box Qty", fiber ? `${fiberBoxQuantity()} pcs` : "-"]],
+        [["Bit / Frame", $("bitRateSelect").selectedOptions[0]?.textContent || ""], ["Wiring", $("dataRouteSelect").selectedOptions[0]?.textContent || ""]],
         [["Processors", stats.Processors || `${processorCount} Units`], ["Main Data", stats["Main Data"] || "-"]],
         [["Short Data", stats["Short Data"] || "-"], ["Data Jumpers", stats["Data Jumpers"] || "-"]]
     ]);
-    $("networkDiagramMeta").textContent = `${processorCount} processor(s), ${stats["Main Data"] || "data runs pending"}`;
+    $("networkDiagramMeta").textContent = `${processorCount} x ${compact(processor?.[F.model]) || "processor"}, ${stats["Main Data"] || "data runs pending"}`;
     $("controllerStack").innerHTML = "";
     renderBoard("networkBoard", "data");
     renderProcessorCanvases();
@@ -1014,7 +1190,7 @@ function renderQuoteSummary() {
     const size = physicalSize();
     const res = resolution();
     const area = size.widthM * size.heightM;
-    const systemText = `${$("systemSelect").value} / ${$("bandwidthSelect").value}`;
+    const systemText = `${$("systemSelect").value} ${compact(selectedProcessorRow()?.[F.model]) || "Processor"} / ${$("bandwidthSelect").value}`;
     $("quoteSummary").innerHTML = [
         ["Model:", state.model],
         ["Control System:", systemText],
@@ -1147,7 +1323,7 @@ function renderQuote() {
     $("quoteBody").innerHTML = rows.join("");
     $("docTotal").textContent = showPrice ? money(total) : "Hidden";
     $("docModel").textContent = state.model;
-    $("docSystem").textContent = `${$("systemSelect").value} / ${$("bandwidthSelect").value}`;
+    $("docSystem").textContent = `${$("systemSelect").value} ${compact(selectedProcessorRow()?.[F.model]) || "Processor"} / ${$("bandwidthSelect").value}`;
 	
     renderQuotePageClones();
 	    
@@ -1219,7 +1395,9 @@ function syncMapping() {
         halfRow: cfg.halfRow,
         bitRate: $("bitRateSelect").value,
         voltageSpec: `${$("voltageSelect").value}|${$("currentSelect").value}`,
-        routeDirection: $("powerRouteSelect").value,
+        routeDirection: $("dataRouteSelect").value,
+        processorModel: compact(selectedProcessorRow()?.[F.model]),
+        fiberBoxModel: compact(selectedFiberBoxRow()?.[F.model]),
         masterCanvas: $("canvasSelect").value
     }, "*");
 }
@@ -1404,7 +1582,7 @@ function appendixProcessorSvg(page) {
     const procTitleY = pad + 4;
     return `<svg class="appendix-svg" viewBox="0 0 ${viewW} ${viewH}" xmlns="http://www.w3.org/2000/svg">
         <rect x="1" y="1" width="${viewW - 2}" height="${viewH - 2}" rx="12" fill="#fff" stroke="#d8e0eb"/>
-        <text x="${pad}" y="${procTitleY}" font-size="14" font-weight="800" fill="#111827">${escapeHtml($("systemSelect").value)} ${escapeHtml(page.title || "Processor")} / ${escapeHtml(canvas.key || $("canvasSelect").value)}</text>
+        <text x="${pad}" y="${procTitleY}" font-size="14" font-weight="800" fill="#111827">${escapeHtml(compact(selectedProcessorRow()?.[F.model]) || $("systemSelect").value)} ${escapeHtml(page.title || "Processor")} / ${escapeHtml(canvas.key || $("canvasSelect").value)}</text>
         <text x="${viewW - pad}" y="${procTitleY}" text-anchor="end" font-size="8" fill="#64748b">${escapeHtml(canvas.width || "-")} x ${escapeHtml(canvas.height || "-")} px | Ports: ${escapeHtml(page.portCount || 0)}</text>
         ${rects.join("")}${paths.join("")}${labels.join("")}
     </svg>`;
@@ -1412,7 +1590,7 @@ function appendixProcessorSvg(page) {
 function appendixPage(title, cards, svg) {
     return `<section class="a4-page wiring-appendix">
         <div class="letterhead-header"><img src="images/roe-letterhead-header.png" alt="ROE Visual"></div>
-        <header><strong>${escapeHtml(title)}</strong><span>${escapeHtml(state.model)} / ${escapeHtml($("systemSelect").value)} ${escapeHtml($("bandwidthSelect").value)}</span></header>
+        <header><strong>${escapeHtml(title)}</strong><span>${escapeHtml(state.model)} / ${escapeHtml(compact(selectedProcessorRow()?.[F.model]) || $("systemSelect").value)} ${escapeHtml($("bandwidthSelect").value)}</span></header>
         <div class="appendix-summary">${appendixCards(cards)}</div>
         ${svg}
         <footer class="letterhead-footer">
@@ -1563,14 +1741,14 @@ function drawQuotePdfPageStart(pdf, image, continued, columns, pageWidth) {
     pdf.setTextColor(31, 41, 55);
     pdf.text(`Date: ${$("docDate").textContent || "-"}`, right, 35, { align: "right" });
     pdf.text(`Product: ${state.model || "-"}`, right, 39.5, { align: "right" });
-    pdf.text(`System: ${$("systemSelect").value} / ${$("bandwidthSelect").value}`, right, 44, { align: "right" });
+    pdf.text(`System: ${$("systemSelect").value} ${compact(selectedProcessorRow()?.[F.model]) || "Processor"} / ${$("bandwidthSelect").value}`, right, 44, { align: "right" });
 
     const cfg = displayConfig();
     const size = physicalSize();
     const res = resolution();
     const summary = [
         ["Model", state.model || "-"],
-        ["Control System", `${$("systemSelect").value} / ${$("bandwidthSelect").value}`],
+        ["Control System", `${$("systemSelect").value} ${compact(selectedProcessorRow()?.[F.model]) || "Processor"} / ${$("bandwidthSelect").value}`],
         ["Display Tiles", `W ${cfg.cols} pcs x H ${size.displayRows} pcs`],
         ["Display Area", `${(size.widthM * size.heightM * 10.7639).toFixed(2)} sq.ft (${(size.widthM * size.heightM).toFixed(2)} sq.m)`],
         ["Display Resolution", res.w && res.h ? `W ${res.w} px x H ${res.h} px` : "TBD"]
@@ -1778,8 +1956,21 @@ function bindEvents() {
         $(id).addEventListener("input", () => renderAll());
         $(id).addEventListener("change", () => renderAll());
     });
-    $("systemSelect").addEventListener("change", () => { populateBandwidth(); renderAll(); });
-    $("bandwidthSelect").addEventListener("change", () => renderAll());
+    $("systemSelect").addEventListener("change", () => { populateBandwidth(true); applyDefaultProcessingCanvas(true); renderAll(); });
+    $("bandwidthSelect").addEventListener("change", () => { applyDefaultProcessingCanvas(true); renderAll(); });
+    $("processorSelect").addEventListener("change", () => {
+        $("canvasSelect").value = processorCanvasKey();
+        populateFiberBoxOptions(true);
+        renderAll();
+    });
+    $("fiberBoxSelect").addEventListener("change", () => renderAll());
+    $("dataRouteSelect").addEventListener("change", () => {
+        if (!$("dataRouteSelect").disabled) $("powerRouteSelect").value = $("dataRouteSelect").value;
+        renderAll();
+    });
+    $("powerRouteSelect").addEventListener("change", () => {
+        if (!$("dataRouteSelect").disabled) $("dataRouteSelect").value = $("powerRouteSelect").value;
+    });
     $("backPageBtn").addEventListener("click", () => {
         const index = pages.findIndex(page => page.id === state.page);
         if (index > 0) setPage(pages[index - 1].id);
@@ -1822,8 +2013,8 @@ Promise.all([
         state.model = initialModels.includes("CRS1.2") ? "CRS1.2" : initialModels[0] || "";
         ensureModelSelection();
         populateSystems();
-        populateBandwidth();
-        applyDefaultProcessingCanvas();
+        populateBandwidth(true);
+        applyDefaultProcessingCanvas(true);
         updateUnitLabels();
         syncGridFromArea();
         renderAll();
