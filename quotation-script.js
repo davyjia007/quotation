@@ -854,13 +854,13 @@ function routedWirePath(p1, p2, direction, laneOffset = 0) {
             const right = p2.c > p1.c;
             const startX = right ? p1.x + p1.box.width * mainInset : p1.x - p1.box.width * mainInset;
             const endX = right ? p2.x - p2.box.width * mainInset : p2.x + p2.box.width * mainInset;
-            return `M ${startX} ${p1.y + laneOffset} L ${endX} ${p2.y + laneOffset}`;
+            return `M ${startX} ${p1.y} L ${endX} ${p2.y}`;
         }
         if (p1.r !== p2.r) {
             const down = p2.r > p1.r;
             const startY = down ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
             const endY = down ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
-            const seamY = down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom);
+            const seamY = (down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
             const startX = p1.x + laneOffset;
             const endX = p2.x + laneOffset;
             return p1.c === p2.c
@@ -877,7 +877,7 @@ function wirePoint(item, cellW, cellH, gap, mode, direction, lane) {
     const cx = left + cellW / 2;
     const cy = top + cellH / 2;
     const sideLane = mode === "power" ? -lane : lane;
-    const horizontalRatio = mode === "power" ? .48 : .52;
+    const horizontalRatio = mode === "power" ? .25 : .75;
     return {
         r: item.r,
         c: item.c,
@@ -1314,7 +1314,7 @@ function appendixMatrixSvg(mode) {
                 const bBox = boxes[points[i].r]?.[points[i].c];
                 if (!aBox || !bBox) continue;
                 const sideLane = laneSign * lane;
-                const horizontalRatio = cableMode === "power" ? .48 : .52;
+                const horizontalRatio = cableMode === "power" ? .25 : .75;
                 const a = { x: direction === "vertical" ? aBox.cx + sideLane : aBox.cx, y: direction === "vertical" ? aBox.cy : aBox.box.top + aBox.box.height * horizontalRatio, r: aBox.r, c: aBox.c, box: aBox.box };
                 const b = { x: direction === "vertical" ? bBox.cx + sideLane : bBox.cx, y: direction === "vertical" ? bBox.cy : bBox.box.top + bBox.box.height * horizontalRatio, r: bBox.r, c: bBox.c, box: bBox.box };
                 allPaths.push(`<path d="${routedWirePath(a, b, direction, 0)}" fill="none" stroke="${stroke}" stroke-width="${cableMode === "power" ? 2.4 : 2}" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>`);

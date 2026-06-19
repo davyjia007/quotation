@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -89,12 +89,12 @@
             box-shadow:0 2px 5px rgba(0,0,0,0.3);
         }
         .power-text { 
-            color:#fff; font-size:10px; font-weight:800; letter-spacing:0.2px;
-            background:transparent; padding:0; border-radius:0; text-shadow:0 0 1px black;
+            color:#111827; font-size:10px; font-weight:800; letter-spacing:0.2px;
+            background:transparent; padding:0; border-radius:0; text-shadow:none;
         }
         .port-text { 
-            color:#fff; font-size:10px; font-weight:800; letter-spacing:0.2px;
-            background:transparent; padding:0; border-radius:0; text-shadow:0 0 1px black;
+            color:#111827; font-size:10px; font-weight:800; letter-spacing:0.2px;
+            background:transparent; padding:0; border-radius:0; text-shadow:none;
         }
         .power-text, .port-text { white-space:nowrap; word-break:keep-all; line-height:1; }
         .controller-text {
@@ -184,9 +184,9 @@
         .pdf-tile-visual { margin:0 auto; }
         .pdf-tile-visual .cab-module { box-shadow:none; }
         .pdf-tile-visual .power-text,
-        .pdf-tile-visual .port-text { font-size:10px; padding:0; border-radius:0; background:transparent; color:#fff; }
+        .pdf-tile-visual .port-text { font-size:10px; padding:0; border-radius:0; background:transparent; color:#111827; }
 
-        .power-matrix-visual .power-text { font-size:10px; font-weight:800; letter-spacing:0; padding:0; color:#fff; background:transparent; border:0; border-radius:0; text-shadow:none; box-shadow:none; }
+        .power-matrix-visual .power-text { font-size:10px; font-weight:800; letter-spacing:0; padding:0; color:#111827; background:transparent; border:0; border-radius:0; text-shadow:none; box-shadow:none; }
         .power-matrix-visual .cab-module { justify-content:center; }
         body.embedded-report { padding:0; background:transparent; overflow:hidden; }
         body.embedded-report .design-dashboard { display:block; }
@@ -1643,13 +1643,13 @@ function drawCablingLines() {
             if (pMatch) {
                 let id = pMatch[1], seq = parseInt(pMatch[2]);
                 if (!powerGroups[id]) powerGroups[id] = [];
-                powerGroups[id].push({ seq, x: isVert ? cx - laneX : cx, y: isVert ? cy : top + elementRect.height * 0.48, r: r, c: c, box });
+                powerGroups[id].push({ seq, x: isVert ? cx - laneX : cx, y: isVert ? cy : top + elementRect.height * 0.25, r: r, c: c, box });
             }
             let dMatch = cell.portLabel.match(/D(\d+)-(\d+)/);
             if (dMatch) {
                 let id = `M${cell.controllerId || 1}-D${dMatch[1]}`, seq = parseInt(dMatch[2]);
                 if (!portGroups[id]) portGroups[id] = [];
-                portGroups[id].push({ seq, x: isVert ? cx + laneX : cx, y: isVert ? cy : top + elementRect.height * 0.52, r: r, c: c, box });
+                portGroups[id].push({ seq, x: isVert ? cx + laneX : cx, y: isVert ? cy : top + elementRect.height * 0.75, r: r, c: c, box });
             }
         }
     }
@@ -1685,13 +1685,13 @@ function drawCablingLines() {
                 const goingRight = p2.c > p1.c;
                 const startX = goingRight ? p1.x + p1.box.width * horizontalMainInset : p1.x - p1.box.width * horizontalMainInset;
                 const endX = goingRight ? p2.x - p2.box.width * horizontalMainInset : p2.x + p2.box.width * horizontalMainInset;
-                return `M ${startX} ${p1.y + laneOffset} L ${endX} ${p2.y + laneOffset}`;
+                return `M ${startX} ${p1.y} L ${endX} ${p2.y}`;
             }
             if (p1.r !== p2.r) {
                 const goingDown = p2.r > p1.r;
                 const startY = goingDown ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
                 const endY = goingDown ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
-                const seamY = goingDown ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom);
+                const seamY = (goingDown ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
                 const startX = p1.x + laneOffset;
                 const endX = p2.x + laneOffset;
                 if (p1.c === p2.c) {
@@ -2308,7 +2308,7 @@ function drawPowerMappingLines() {
             groups[id].push({
                 seq: parseInt(match[2], 10),
                 x: left + elementRect.width / 2,
-                y: direction === 'horizontal' ? top + elementRect.height * 0.48 : top + elementRect.height / 2,
+                y: direction === 'horizontal' ? top + elementRect.height * 0.25 : top + elementRect.height / 2,
                 r,
                 c,
                 box: {
@@ -2881,7 +2881,7 @@ function drawPdfTileLines(tile, matrix, mode) {
                 groupsPower[id].push({
                     seq: parseInt(powerMatch[2], 10),
                     x: mode === 'power' ? cx : direction === 'vertical' ? cx - 12 : cx,
-                    y: direction === 'horizontal' ? box.top + box.height * 0.48 : cy,
+                    y: direction === 'horizontal' ? box.top + box.height * 0.25 : cy,
                     r, c, box
                 });
             }
@@ -2890,7 +2890,7 @@ function drawPdfTileLines(tile, matrix, mode) {
                 if (dataMatch) {
                     const id = `D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
-                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + 12 : cx, y: direction === 'vertical' ? cy : box.top + box.height * 0.52, r, c, box });
+                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + 12 : cx, y: direction === 'vertical' ? cy : box.top + box.height * 0.75, r, c, box });
                 }
             }
         }
@@ -2920,13 +2920,13 @@ function drawPdfTileLines(tile, matrix, mode) {
                 const right = p2.c > p1.c;
                 const startX = right ? p1.x + p1.box.width * horizontalMainInset : p1.x - p1.box.width * horizontalMainInset;
                 const endX = right ? p2.x - p2.box.width * horizontalMainInset : p2.x + p2.box.width * horizontalMainInset;
-                return `M ${startX} ${p1.y + laneOffset} L ${endX} ${p2.y + laneOffset}`;
+                return `M ${startX} ${p1.y} L ${endX} ${p2.y}`;
             }
             if (p1.r !== p2.r) {
                 const down = p2.r > p1.r;
                 const startY = down ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
                 const endY = down ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
-                const seamY = down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom);
+                const seamY = (down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
                 const startX = p1.x + laneOffset;
                 const endX = p2.x + laneOffset;
                 return p1.c === p2.c ? `M ${startX} ${startY} L ${startX} ${seamY} L ${startX} ${endY}` : `M ${startX} ${startY} L ${startX} ${seamY} L ${endX} ${seamY} L ${endX} ${endY}`;
@@ -3415,13 +3415,13 @@ function pdfPathPoints(p1, p2, laneOffset, direction) {
     } else {
         if (p1.r === p2.r && p1.c !== p2.c) {
             const right = p2.c > p1.c;
-            return [[right ? p1.x + p1.box.width * horizontalMainInset : p1.x - p1.box.width * horizontalMainInset, p1.y + laneOffset], [right ? p2.x - p2.box.width * horizontalMainInset : p2.x + p2.box.width * horizontalMainInset, p2.y + laneOffset]];
+            return [[right ? p1.x + p1.box.width * horizontalMainInset : p1.x - p1.box.width * horizontalMainInset, p1.y], [right ? p2.x - p2.box.width * horizontalMainInset : p2.x + p2.box.width * horizontalMainInset, p2.y]];
         }
         if (p1.r !== p2.r) {
             const down = p2.r > p1.r;
             const startY = down ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
             const endY = down ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
-            const seamY = down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom);
+            const seamY = (down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
             const startX = p1.x + laneOffset;
             const endX = p2.x + laneOffset;
             return p1.c === p2.c ? [[startX, startY], [startX, seamY], [startX, endY]] : [[startX, startY], [startX, seamY], [endX, seamY], [endX, endY]];
@@ -3458,13 +3458,13 @@ function pdfPowerPathPoints(p1, p2, laneOffset, direction) {
             const right = p2.c > p1.c;
             const startX = right ? p1.x + p1.box.width * horizontalMainInset : p1.x - p1.box.width * horizontalMainInset;
             const endX = right ? p2.x - p2.box.width * horizontalMainInset : p2.x + p2.box.width * horizontalMainInset;
-            return [[startX, p1.y + laneOffset], [endX, p2.y + laneOffset]];
+            return [[startX, p1.y], [endX, p2.y]];
         }
         if (p1.r !== p2.r) {
             const down = p2.r > p1.r;
             const startY = down ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
             const endY = down ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
-            const seamY = down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom);
+            const seamY = (down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
             const startX = p1.x + laneOffset;
             const endX = p2.x + laneOffset;
             return p1.c === p2.c
@@ -3564,7 +3564,7 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 groupsPower[id].push({
                     seq: parseInt(powerMatch[2], 10),
                     x: mode === 'power' ? cx : direction === 'vertical' ? cx - box.width * 0.18 : cx,
-                    y: direction === 'horizontal' ? box.top + box.height * 0.48 : cy,
+                    y: direction === 'horizontal' ? box.top + box.height * 0.25 : cy,
                     r, c, box
                 });
             }
@@ -3573,7 +3573,7 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 if (dataMatch) {
                     const id = `D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
-                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + box.width * 0.18 : cx, y: direction === 'vertical' ? cy : box.top + box.height * 0.52, r, c, box });
+                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + box.width * 0.18 : cx, y: direction === 'vertical' ? cy : box.top + box.height * 0.75, r, c, box });
                 }
             }
             labels.push({ cell, x: cx, y: cy, box });
@@ -3600,13 +3600,13 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
     labels.forEach(({ cell, x, y, box }) => {
         if (mode === 'power') {
             const font = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.powerLabel, box, 5, 0.32);
-            pdfDrawBadgeText(pdf, cell.powerLabel, x, y + font * 0.02, font, '#ffffff', 'bold');
+            pdfDrawBadgeText(pdf, cell.powerLabel, x, y + font * 0.02, font, '#111827', 'bold');
         } else {
             const gap = Math.max(1.25, box.height * 0.14);
             const powerFont = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.powerLabel, box, 4.4, 0.2);
             const portFont = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.portLabel, box, 4.4, 0.2);
-            pdfDrawBadgeText(pdf, cell.powerLabel, x, y - gap, powerFont, '#ffffff', 'bold');
-            pdfDrawBadgeText(pdf, cell.portLabel, x, y + gap, portFont, '#ffffff', 'bold');
+            pdfDrawBadgeText(pdf, cell.powerLabel, x, y - gap, powerFont, '#111827', 'bold');
+            pdfDrawBadgeText(pdf, cell.portLabel, x, y + gap, portFont, '#111827', 'bold');
         }
     });
 }
@@ -3779,7 +3779,7 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
 
     labels.forEach(item => {
         const fontSize = pdfAdaptiveLabelFont(pdf, lastMatrix, item.label, item.box, 4.8, 0.3);
-        pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#ffffff', 'bold');
+        pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#111827', 'bold');
     });
 }
 
@@ -3921,4 +3921,10 @@ init();
 </script>
 </body>
 </html>
+
+
+
+
+
+
 
