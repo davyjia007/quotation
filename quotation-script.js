@@ -479,7 +479,9 @@ function processorRows() {
 }
 function ratioCapacity(row) {
     const match = compact(row?.[F.ratio]).match(/\/\s*(\d+(?:\.\d+)?)/);
-    return match ? Math.max(1, Math.floor(number(match[1], 1))) : 0;
+    if (match) return Math.max(1, Math.floor(number(match[1], 1)));
+    const modelCapacity = compact(row?.[F.model]).match(/(?:CVT|H)(\d+)/i);
+    return modelCapacity ? Math.max(1, Math.floor(number(modelCapacity[1], 1))) : 0;
 }
 function fiberBoxQuantity() {
     const row = selectedFiberBoxRow();
@@ -776,6 +778,7 @@ function populateProcessorOptions(prefer4K = false) {
     const previous = $("processorSelect").value;
     let rows = processingRows(isMainProcessorRow).filter(row => compact(row[F.system]) === system && compact(row[F.bandwidth]) === bandwidth);
     if (state.category === "CecoCeco") rows = rows.filter(row => compact(row[F.model]).toLowerCase() === "artmorph play");
+    else rows = rows.filter(row => compact(row[F.model]).toLowerCase() !== "artmorph play");
     const seen = new Set();
     rows = rows.filter(row => {
         const key = processingRowKey(row);
@@ -790,7 +793,16 @@ function populateProcessorOptions(prefer4K = false) {
     $("processorSelect").innerHTML = rows.map(row => `<option value="${escapeHtml(processingRowKey(row))}">${escapeHtml(compact(row[F.model]))} (${processorCanvasKey(row)})</option>`).join("");
     if (!prefer4K && rows.some(row => processingRowKey(row) === previous)) $("processorSelect").value = previous;
     else {
-        const preferred = rows.find(row => processorCanvasKey(row) === "4K") || rows[0];
+        const defaultModels = {
+            Brompton: "sx40",
+            MVR: "helios 4k",
+            Colorlight: "z6 pro-g2",
+            Nova: "mx40 roe"
+        };
+        const preferredModel = defaultModels[system];
+        const preferred = rows.find(row => compact(row[F.model]).toLowerCase() === preferredModel)
+            || rows.find(row => processorCanvasKey(row) === "4K")
+            || rows[0];
         if (preferred) $("processorSelect").value = processingRowKey(preferred);
     }
     if ($("canvasSelect")) $("canvasSelect").value = processorCanvasKey();
