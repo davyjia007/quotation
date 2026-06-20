@@ -786,7 +786,9 @@ textarea { min-height: 74px; resize: vertical; }
 .processor-mini-cell {
     display: grid;
     place-items: center;
-    width: 30px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     min-height: 10px;
     border: 1px solid rgba(255,255,255,.32);
     background: rgba(255,255,255,.04);
@@ -1153,7 +1155,7 @@ body.show-wiring #wiringPages {
     .panel { border-radius: 14px; }
     .panel-inner, .config-card, .diagram-card { padding: 14px; }
     .category-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .category-card { grid-template-rows: 92px auto; }
+    .category-card { grid-template-rows: 78px auto; gap: 6px; }
     .category-card strong { font-size: 14px; }
     .category-card span { font-size: 10px; }
     .product-display { min-height: 0; }
@@ -1161,7 +1163,8 @@ body.show-wiring #wiringPages {
     .selected-product-hero img { max-height: 165px; }
     .selected-product-name { font-size: 18px; }
     .carousel-shell { grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 6px; padding: 10px; }
-    .model-card { flex-basis: 130px; }
+    .model-card { flex-basis: 118px; padding: 8px; }
+    .model-card img { height: 58px; }
     .product-search-panel { padding: 0 10px 14px; }
     .mode-tabs-row { grid-template-columns: 1fr; gap: 10px; }
     .mode-tabs { display: grid; width: 100%; margin-bottom: 12px; }
@@ -1185,7 +1188,7 @@ body.show-wiring #wiringPages {
     .diagram-card { min-height: 0; }
     .diagram-tools { flex-direction: column; align-items: flex-start; }
     .diagram-title h2 { font-size: 20px; }
-    .wiring-board { min-height: 420px; padding: 8px; border-radius: 12px; }
+    .wiring-board { min-height: 360px; padding: 6px; border-radius: 12px; }
     .wiring-map { min-width: 0; margin-top: 72px; padding: 8px; }
     .run-label { left: 10px; top: 10px; }
     .legend { left: 10px; right: 10px; top: 45px; flex-wrap: wrap; gap: 8px; }
@@ -1202,7 +1205,11 @@ body.show-wiring #wiringPages {
     .brand-kicker { font-size: 9px; }
     .step span { display: none; }
     .step::before { margin: auto; }
-    .category-row, .final-product-card, .quote-options-row, .quote-export-group { grid-template-columns: 1fr; }
+    .category-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .category-card { grid-template-rows: 68px auto; }
+    .final-product-card, .quote-options-row, .quote-export-group { grid-template-columns: 1fr; }
+    .selected-product-hero { min-height: 145px; }
+    .selected-product-hero img { max-height: 132px; }
     .section-title { font-size: 19px; }
 }
 @page { size: A4 portrait; margin: 0; }
@@ -1568,7 +1575,6 @@ body.show-wiring #wiringPages {
 <script src="quotation-script.js"></script>
 </body>
 </html>
-
 
 
 

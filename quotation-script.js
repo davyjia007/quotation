@@ -141,6 +141,40 @@ function isCoreFreeSpare(row) {
         name.includes("接收卡") || name.includes("power box") || name.includes("电源盒") ||
         name.includes("psu") || name.includes("开关电源") || name.includes("power supply");
 }
+function isAllowedSmallScreenSpare(row) {
+    const name = `${row?.[F.materialName] || ""} ${row?.[F.englishDesc] || ""}`.toLowerCase();
+    return name.includes("面罩") || name.includes("mask") || name.includes("灯珠") ||
+        /(^|\W)led(\W|$)/i.test(name) || name.includes("驱动ic") || name.includes("drive ic") ||
+        name.includes("driver ic") || name.includes("行mos") || name.includes("mos");
+}
+function spareRatio(row) {
+    const raw = compact(row?.[F.ratio]);
+    if (!raw) return 0;
+    const value = number(raw, 0);
+    return raw.includes("%") ? value / 100 : value;
+}
+function spareRowSize(row) {
+    const size = normalizeSize(row?.[F.size]);
+    return /^mini$/i.test(size) ? "Quarter" : size;
+}
+function constrainedSpareQuantity(row, totalUnits, quantities) {
+    const free = isFreeSpare(row);
+    const charged = isChargedSpare(row);
+    if (!free && !charged) return 0;
+    const rowSize = compact(row?.[F.size]) ? spareRowSize(row) : "";
+    const baseQty = rowSize ? number(quantities[rowSize], 0) : totalUnits;
+    if (rowSize && baseQty <= 0) return 0;
+    const core = isCoreFreeSpare(row);
+    const isVoyager = state.model.toLowerCase().includes("voyager");
+    if (!isVoyager && totalUnits <= 8 && !core && !isAllowedSmallScreenSpare(row)) return 0;
+    const ratio = spareRatio(row);
+    if (free && !isVoyager && totalUnits <= 8 && core) return Math.floor(baseQty * ratio);
+    if (charged && !isVoyager && totalUnits <= 8 && core) {
+        return baseQty * ratio >= 1 ? Math.ceil(baseQty * ratio) : Math.max(1, Math.ceil(baseQty * ratio));
+    }
+    if (ratio <= 0) return 0;
+    return Math.max(1, Math.ceil(baseQty * ratio));
+}
 
 function categoryInfo() { return categories.find(item => item.id === state.category) || categories[0]; }
 function sourceCategory(cat = categoryInfo()) { return cat.source || cat.id; }
@@ -208,6 +242,9 @@ function categoryImage() { return categoryInfo().image; }
 function safeModelFile(model) { return String(model || "").replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+|_+$/g, "") || "product"; }
 function productImage(model = state.model) {
     return state.productImages?.[model]?.file || categoryImage();
+}
+function productThumbnail(model = state.model) {
+    return state.productImages?.[model]?.thumb || productImage(model);
 }
 function imageFallback() { return categoryImage(); }
 function rowMatchesCategory(row, cat = categoryInfo()) {
@@ -562,14 +599,14 @@ function computeItems() {
             sap: row?.[F.sap] || ""
         });
     });
+    const quantities = layoutQuantities();
     const totalUnits = equivalentUnits();
     selectedRows().forEach(row => {
         const free = isFreeSpare(row);
         const charged = isChargedSpare(row);
         if (!free && !charged) return;
-        if (free && !isCoreFreeSpare(row)) return;
-        const ratio = number(row[F.ratio], free ? 0.02 : 0.01);
-        const qty = Math.max(1, Math.ceil(totalUnits * ratio));
+        const qty = constrainedSpareQuantity(row, totalUnits, quantities);
+        if (qty <= 0) return;
         addItem(map, {
             section: free ? "Spare Parts for Free" : "Spare Parts for Charged",
             title: englishName(row, free ? "Free Spare Part" : "Charged Spare Part"),
@@ -607,32 +644,38 @@ function renderPageActions() {
     document.querySelector(".top-actions")?.classList.add("is-hidden");
 }
 function renderCategories() {
-    $("categoryRow").innerHTML = categories.map(cat => `
-        <button class="category-card ${cat.id === state.category ? "active" : ""}" type="button" data-category="${cat.id}">
-            <div class="category-image"><img src="${cat.image}" alt="${cat.label}"></div>
+    if (!$("categoryRow").children.length) {
+        $("categoryRow").innerHTML = categories.map(cat => `
+        <button class="category-card" type="button" data-category="${cat.id}">
+            <div class="category-image"><img src="${cat.image}" alt="${cat.label}" decoding="async"></div>
             <strong>${cat.label}</strong>
             <span>${cat.note}</span>
         </button>
-    `).join("");
-    $("categoryRow").querySelectorAll("[data-category]").forEach(btn => btn.addEventListener("click", () => {
-        state.category = btn.dataset.category;
-        state.panelQtyTouched.clear();
-        ensureModelSelection();
-        populateSystems();
-        populateBandwidth(true);
-        applyDefaultProcessingCanvas(true);
-        syncGridFromArea();
-        renderAll();
-    }));
+        `).join("");
+        $("categoryRow").querySelectorAll("[data-category]").forEach(btn => btn.addEventListener("click", () => {
+            state.category = btn.dataset.category;
+            state.panelQtyTouched.clear();
+            ensureModelSelection();
+            populateSystems();
+            populateBandwidth(true);
+            applyDefaultProcessingCanvas(true);
+            syncGridFromArea();
+            renderAll();
+        }));
+    }
+    $("categoryRow").querySelectorAll("[data-category]").forEach(btn => btn.classList.toggle("active", btn.dataset.category === state.category));
 }
 function renderModels() {
     ensureModelSelection();
     const models = modelsForCategory();
-    $("modelCarousel").innerHTML = models.map(model => {
-        const panel = panelRowsForCategory().find(row => compact(row[F.model]) === model);
-        const spec = getScreenSpecForPanel(panel);
-        return `<button class="model-card ${model === state.model ? "active" : ""}" type="button" data-model="${escapeHtml(model)}">
-            <img src="${productImage(model)}" alt="${escapeHtml(model)}" onerror="this.onerror=null;this.src='${imageFallback()}';">
+    const carousel = $("modelCarousel");
+    const renderKey = `${state.category}|${models.join("|")}`;
+    if (carousel.dataset.renderKey !== renderKey) {
+        carousel.innerHTML = models.map(model => {
+            const panel = panelRowsForCategory().find(row => compact(row[F.model]) === model);
+            const spec = getScreenSpecForPanel(panel);
+            return `<button class="model-card" type="button" data-model="${escapeHtml(model)}">
+            <img src="${productThumbnail(model)}" alt="${escapeHtml(model)}" loading="lazy" decoding="async" fetchpriority="low" onerror="this.onerror=null;this.src='${imageFallback()}';">
             <strong>${escapeHtml(model)}</strong>
             <span>${escapeHtml(panel?.[F.productName] || categoryInfo().label)}</span>
             <div class="product-tooltip">
@@ -641,27 +684,33 @@ function renderModels() {
                 <div><strong>Dimension:</strong> ${escapeHtml(dimensionLabel(spec.dimension))}</div>
                 <div><strong>Waterproof:</strong> ${escapeHtml(compact(panel?.[F.waterproof]) || "TBD")}</div>
             </div>
-        </button>`;
-    }).join("");
-    $("modelCarousel").querySelectorAll("[data-model]").forEach(btn => btn.addEventListener("click", () => {
-        state.model = btn.dataset.model;
-        state.panelQtyTouched.clear();
-        populateSystems();
-        populateBandwidth(true);
-        applyDefaultProcessingCanvas(true);
-        syncGridFromArea();
-        renderAll();
-    }));
-    $("selectedProductImage").src = productImage();
+            </button>`;
+        }).join("");
+        carousel.dataset.renderKey = renderKey;
+        carousel.querySelectorAll("[data-model]").forEach(btn => btn.addEventListener("click", () => {
+            state.model = btn.dataset.model;
+            state.panelQtyTouched.clear();
+            populateSystems();
+            populateBandwidth(true);
+            applyDefaultProcessingCanvas(true);
+            syncGridFromArea();
+            renderAll();
+        }));
+    }
+    carousel.querySelectorAll("[data-model]").forEach(btn => btn.classList.toggle("active", btn.dataset.model === state.model));
+    if ($("selectedProductImage").getAttribute("src") !== productImage()) $("selectedProductImage").src = productImage();
+    $("selectedProductImage").decoding = "async";
+    $("selectedProductImage").fetchPriority = "high";
     $("selectedProductImage").onerror = () => { $("selectedProductImage").onerror = null; $("selectedProductImage").src = imageFallback(); };
-    $("screenTexture").src = productImage();
+    if ($("screenTexture").getAttribute("src") !== productImage()) $("screenTexture").src = productImage();
     $("screenTexture").onerror = () => { $("screenTexture").onerror = null; $("screenTexture").src = imageFallback(); };
     $("selectedProductName").textContent = state.model ? `${state.model} / ${categoryInfo().label}` : "-";
     // Auto-scroll carousel to the active model
-    requestAnimationFrame(() => {
+    if (carousel.dataset.activeModel !== state.model) requestAnimationFrame(() => {
         const activeCard = document.querySelector("#modelCarousel .model-card.active");
         if (activeCard) activeCard.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     });
+    carousel.dataset.activeModel = state.model;
 }
 function renderProductSuggestions(query) {
     const target = $("productSuggestions");
@@ -976,7 +1025,7 @@ function powerMappingTone(labelOrId) {
     const index = match ? Math.max(0, Number(match[1]) - 1) : 0;
     const cycle = Math.floor(index / 2) % 3;
     return {
-        fill: index % 2 === 0 ? "hsla(4, 78%, 55%, 0.18)" : "transparent",
+        fill: index % 2 === 0 ? "hsla(4, 78%, 55%, 0.26)" : "hsla(4, 78%, 55%, 0.07)",
         border: `hsl(4, 74%, ${[68, 62, 72][cycle]}%)`,
         line: `hsl(4, 82%, ${[47, 42, 52][cycle]}%)`
     };
@@ -1010,8 +1059,7 @@ function dataBorderColor(surface = "light") {
     return surface === "dark" ? "rgba(157,208,255,0.58)" : "rgba(31,41,55,0.18)";
 }
 function powerStroke(run = 1) { return powerMappingTone(`P${run}`).line; }
-function routedWirePath(p1, p2, direction, laneOffset = 0) {
-    const mainInset = 0.28;
+function routedWirePath(p1, p2, direction, laneOffset = 0, mainInset = 0.28) {
     const sideInset = 0.18;
     const mid = (a, b) => (a + b) / 2;
     const isVert = direction === "vertical";
@@ -1073,21 +1121,24 @@ function wirePoint(item, cellW, cellH, gap, mode, direction, lane) {
 function renderWireSvg(matrix, mode, cellW, cellH, gap) {
     const groups = cableGroups(matrix, mode);
     const paths = [];
+    const markers = [];
     const direction = mode === "data" ? ($("dataRouteSelect")?.value || "vertical") : ($("powerRouteSelect")?.value || "vertical");
     const lane = Math.min(11, Math.max(4, Math.min(cellW, cellH) * .22));
     Object.entries(groups).forEach(([groupId, points]) => {
         const color = mode === "power" ? powerStroke(points[0]?.run) : "#1e80ff";
+        const markerId = `power-arrow-${groupId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+        if (mode === "power") markers.push(`<marker id="${markerId}" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="${color}"/></marker>`);
         for (let i = 1; i < points.length; i++) {
             const a = points[i - 1], b = points[i];
             const p1 = wirePoint(a, cellW, cellH, gap, mode, direction, lane);
             const p2 = wirePoint(b, cellW, cellH, gap, mode, direction, lane);
-            const d = routedWirePath(p1, p2, direction, 0);
-            paths.push(`<path d="${d}" stroke="${color}" stroke-width="${mode === "power" ? 2 : 1.7}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`);
+            const d = routedWirePath(p1, p2, direction, 0, mode === "power" ? 0.18 : 0.28);
+            paths.push(`<path d="${d}" stroke="${color}" stroke-width="${mode === "power" ? 2 : 1.7}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"${mode === "power" ? ` marker-end="url(#${markerId})"` : ""}/>`);
         }
     });
     const width = (matrix[0]?.length || 1) * cellW + Math.max(0, (matrix[0]?.length || 1) - 1) * gap;
     const height = matrix.length * cellH + Math.max(0, matrix.length - 1) * gap;
-    return `<svg class="wire-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">${paths.join("")}</svg>`;
+    return `<svg class="wire-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><defs>${markers.join("")}</defs>${paths.join("")}</svg>`;
 }
 function renderBoard(targetId, mode) {
     const cfg = displayConfig();
@@ -1171,7 +1222,7 @@ function renderProcessorCanvases() {
                 items.push(`<div class="processor-mini-cell" style="${style}">${escapeHtml(cell?.cell?.portLabel || "")}</div>`);
             }
         }
-        const grid = `<div class="processor-mini-grid" style="grid-template-columns:repeat(${canvasCols}, ${cellW}px);">${items.join("")}</div>`;
+        const grid = `<div class="processor-mini-grid" style="grid-template-columns:repeat(${canvasCols}, ${cellW}px);grid-template-rows:${rowHeights.map(height => `${height}px`).join(" ")};">${items.join("")}</div>`;
         const used = page.actualPixelW && page.actualPixelH ? `${Math.round(page.actualPixelW)} x ${Math.round(page.actualPixelH)} px used` : `${page.portCount || 0} ports`;
         return `<article class="processor-canvas-card">
             <h3>${escapeHtml(compact(selectedProcessorRow()?.[F.model]) || $("systemSelect").value)} - ${escapeHtml(page.title || `Processor ${page.displayIndex + 1}`)} / ${escapeHtml(canvas.key || $("canvasSelect").value)}</h3>
@@ -1474,8 +1525,9 @@ function appendixMatrixSvg(mode) {
             const y = rowY[r];
             const h = rowHeights[r];
             const isPowerOnly = mode === "power";
-            const fill = isPowerOnly ? "rgba(232,56,44,.08)" : topologyFill(matrix, cell);
-            const stroke = isPowerOnly ? "#e8382c" : dataBorderColor();
+            const powerTone = isPowerOnly ? powerMappingTone(cell.powerLabel) : null;
+            const fill = isPowerOnly ? powerTone.fill : topologyFill(matrix, cell);
+            const stroke = isPowerOnly ? powerTone.border : dataBorderColor();
             boxes[r][c] = {
                 x,
                 y,
@@ -1508,7 +1560,7 @@ function appendixMatrixSvg(mode) {
                 const horizontalRatio = cableMode === "power" ? .25 : .75;
                 const a = { x: direction === "vertical" ? aBox.cx + sideLane : aBox.cx, y: direction === "vertical" ? aBox.cy : aBox.box.top + aBox.box.height * horizontalRatio, r: aBox.r, c: aBox.c, box: aBox.box };
                 const b = { x: direction === "vertical" ? bBox.cx + sideLane : bBox.cx, y: direction === "vertical" ? bBox.cy : bBox.box.top + bBox.box.height * horizontalRatio, r: bBox.r, c: bBox.c, box: bBox.box };
-                allPaths.push(`<path d="${routedWirePath(a, b, direction, 0)}" fill="none" stroke="${stroke}" stroke-width="${cableMode === "power" ? 2.4 : 2}" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>`);
+                allPaths.push(`<path d="${routedWirePath(a, b, direction, 0, cableMode === "power" ? 0.18 : 0.28)}" fill="none" stroke="${stroke}" stroke-width="${cableMode === "power" ? 2.4 : 2}" stroke-linecap="round" stroke-linejoin="round" opacity=".88"${cableMode === "power" ? ` marker-end="url(#appendix-power-arrow)"` : ""}/>`);
             }
         });
     };
@@ -1525,6 +1577,7 @@ function appendixMatrixSvg(mode) {
     const title = mode === "both" ? "Power & Data Topology" : mode === "power" ? "Power Mapping" : "Data Topology";
     const titleY = pad + 4;
     return `<svg class="appendix-svg" viewBox="0 0 ${viewW} ${viewH}" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="appendix-power-arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/></marker></defs>
         <rect x="1" y="1" width="${viewW - 2}" height="${viewH - 2}" rx="12" fill="#fff" stroke="#d8e0eb"/>
         <text x="${pad}" y="${titleY}" font-size="15" font-weight="800" fill="#111827">${title}</text>
         <text x="${viewW - pad}" y="${titleY}" text-anchor="end" font-size="9" fill="#64748b">${escapeHtml(state.model)} / ${cols} x ${physicalSize().displayRows}</text>

@@ -368,7 +368,7 @@ function powerMappingTone(labelOrId) {
     const lineLightness = [47, 42, 52][cycle];
     const borderLightness = [68, 62, 72][cycle];
     return {
-        fill: filled ? 'hsla(4, 78%, 55%, 0.18)' : 'transparent',
+        fill: filled ? 'hsla(4, 78%, 55%, 0.26)' : 'hsla(4, 78%, 55%, 0.07)',
         border: `hsl(4, 74%, ${borderLightness}%)`,
         line: `hsl(4, 82%, ${lineLightness}%)`
     };
@@ -2347,7 +2347,7 @@ function drawPowerMappingLines() {
     };
 
     const powerArrowPath = (previous, current) => {
-        const insideRatio = direction === 'horizontal' ? 0.18 : 0.28;
+        const insideRatio = 0.18;
         if (previous.r !== current.r && previous.c === current.c) {
             const goingDown = current.r > previous.r;
             const startY = goingDown ? previous.y + previous.box.height * insideRatio : previous.y - previous.box.height * insideRatio;
@@ -3432,7 +3432,7 @@ function pdfPathPoints(p1, p2, laneOffset, direction) {
 
 function pdfPowerPathPoints(p1, p2, laneOffset, direction) {
     const mid = (a, b) => (a + b) / 2;
-    const verticalMainInset = 0.24;
+    const verticalMainInset = 0.18;
     const horizontalMainInset = 0.18;
     const sideInset = 0.18;
     if (direction === 'vertical') {
@@ -3779,7 +3779,7 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
 
     labels.forEach(item => {
         const fontSize = pdfAdaptiveLabelFont(pdf, lastMatrix, item.label, item.box, 4.8, 0.3);
-        pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#111827', 'bold');
+        pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#ffffff', 'bold');
     });
 }
 
