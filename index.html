@@ -1212,6 +1212,176 @@ body.show-wiring #wiringPages {
     .selected-product-hero img { max-height: 132px; }
     .section-title { font-size: 19px; }
 }
+/* Precision White UI - selected product design direction */
+:root {
+    --bg: #f5f6f8; --bg2: #eef1f4; --panel: #ffffff; --panel2: #f8f9fb;
+    --line: #e2e6eb; --line2: #cfd5dd; --text: #17202b; --muted: #667085;
+    --blue: #e3192b; --blue2: #f04438; --red: #d91028; --green: #1f9d55;
+    --amber: #b7791f; --ink: #17202b;
+}
+body { color:var(--text); background:var(--bg); font-family:Inter,"SF Pro Text","Segoe UI",Arial,Helvetica,sans-serif; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+button { min-height:42px; color:#344054; background:#fff; border:1px solid #d9dee5; border-radius:8px; font-weight:700; transition:border-color .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease; }
+button:hover { color:#17202b; background:#f8f9fb; border-color:#b9c1cb; }
+button:active { transform:translateY(1px); }
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible { outline:3px solid rgba(227,25,43,.16); outline-offset:1px; }
+button:disabled,input:disabled,select:disabled { color:#98a2b3!important; background:#f2f4f7!important; border-color:#e4e7ec!important; cursor:not-allowed; opacity:1; }
+input,select,textarea { min-height:42px; color:#17202b; background:#fff; border:1px solid #d0d5dd; border-radius:8px; box-shadow:0 1px 2px rgba(16,24,40,.03); }
+input:hover,select:hover,textarea:hover { border-color:#98a2b3; }
+input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12); border-color:#e3192b; }
+.app-shell { padding:0 24px 34px; }
+.topbar { grid-template-columns:300px minmax(460px,1fr); min-height:82px; margin:0 -24px 24px; padding:14px 24px; background:rgba(255,255,255,.96); border-bottom:1px solid #e4e7ec; }
+.brand img { width:98px; height:42px; padding:2px 4px; border-radius:0; background:transparent; }
+.brand-kicker { color:#d91028; font-size:10px; letter-spacing:.09em; }
+.brand h1 { color:#101828; font-size:20px; font-weight:760; }
+.steps { gap:4px; max-width:640px; justify-self:center; width:100%; }
+.step { justify-content:center; min-height:52px; padding:5px 8px; color:#667085; border:0; border-radius:0; background:transparent; font-size:13px; }
+.step:hover { background:transparent; color:#344054; border-color:transparent; }
+.step::before { flex-basis:28px; height:28px; color:#667085; background:#fff; border-color:#d0d5dd; }
+.step.active { color:#d91028; background:transparent; border-color:transparent; }
+.step.active::before { color:#fff; background:#e3192b; border-color:#e3192b; box-shadow:0 0 0 4px rgba(227,25,43,.08); }
+.step.done { color:#344054; }
+.step.done::before { color:#fff; background:#344054; border-color:#344054; }
+.btn-primary { color:#fff; background:#e3192b; border-color:#e3192b; box-shadow:0 1px 2px rgba(16,24,40,.08); }
+.btn-primary:hover { color:#fff; background:#c91426; border-color:#c91426; }
+.btn-secondary { color:#344054; background:#fff; border:1px solid #d0d5dd; }
+.btn-outline { color:#475467; background:#fff; border:1px solid #d0d5dd; }
+.page { gap:16px; }
+.panel { color:#17202b; background:#fff; border:1px solid #e1e5ea; border-radius:12px; box-shadow:none; }
+.panel-inner,.config-card,.diagram-card { padding:22px 24px; }
+.section-title { margin-bottom:18px; color:#101828; font-size:20px; font-weight:760; letter-spacing:-.015em; }
+.section-title::before { display:none; }
+.settings-group-title { display:flex; align-items:center; gap:9px; margin:20px 0 8px; color:#344054; font-size:13px; font-weight:760; letter-spacing:0; text-transform:none; }
+.settings-group-title::after { content:""; flex:1; height:1px; background:#eceff2; }
+.settings-group-title:first-of-type { margin-top:0; }
+.summary-note { margin:0 0 9px; color:#667085; font-size:11px; line-height:1.45; }
+.installation-field { margin-bottom:18px; padding:14px; border:1px solid #e1e5ea; border-radius:10px; background:#fbfcfd; }
+.installation-field label { display:block; margin-bottom:8px; }
+.muted,.diagram-title p { color:#667085; }
+.category-row { gap:12px; }
+.category-card { grid-template-rows:112px auto; gap:8px; padding:8px; color:#344054; border:1px solid #e1e5ea; border-radius:10px; background:#fff; }
+.category-card:hover { border-color:#b8c0ca; background:#fff; box-shadow:0 4px 12px rgba(16,24,40,.05); }
+.category-image { border:0; border-radius:7px; background:#f5f6f8; }
+.category-card.active { border-color:#e3192b; box-shadow:0 0 0 2px rgba(227,25,43,.08); }
+.category-card.active .category-image { border-color:transparent; box-shadow:none; }
+.category-card strong { color:#17202b; font-size:15px; }
+.category-card span { color:#667085; font-size:11px; }
+.product-parameter-grid { gap:16px; margin-top:16px; grid-template-columns:minmax(360px,.82fr) minmax(460px,1.18fr); }
+.product-display { min-height:500px; }
+.selected-product-hero { min-height:240px; background:#fbfbfc; border-top:1px solid #f0f1f3; border-bottom:1px solid #f0f1f3; }
+.selected-product-name { color:#101828; font-size:19px; }
+.carousel-shell { padding:14px 18px 18px; }
+.carousel { gap:10px; }
+.model-card { color:#344054; border-color:#e1e5ea; background:#fff; border-radius:9px; box-shadow:none; }
+.model-card:hover { border-color:#b8c0ca; background:#fff; }
+.model-card.active { border-color:#e3192b; background:#fff5f6; box-shadow:0 0 0 1px rgba(227,25,43,.12); }
+.model-card strong { color:#17202b; }
+.model-card span { color:#667085; }
+.product-tooltip { color:#344054; background:#fff; border-color:#e1e5ea; box-shadow:0 12px 30px rgba(16,24,40,.12); }
+.product-search-panel { border-top-color:#eceff2; }
+.product-search-panel label,.field label { color:#344054; font-size:13px; font-weight:700; }
+.product-search-box button { color:#667085; background:transparent; border:0; }
+.product-suggestions { color:#344054; background:#fff; border-color:#d0d5dd; box-shadow:0 14px 32px rgba(16,24,40,.12); }
+.product-suggestions button { border:0; border-bottom:1px solid #eef0f2; border-radius:0; }
+.mode-tabs,.unit-tabs,.aspect-tabs { border-color:#d0d5dd; background:#f7f8fa; border-radius:9px; }
+.mode-tabs button,.unit-tabs button,.aspect-tabs button { color:#475467; border:0; background:transparent; }
+.mode-tabs button.active,.unit-tabs button.active,.aspect-tabs button.active { color:#fff; background:#e3192b; box-shadow:0 1px 2px rgba(16,24,40,.08); }
+.half-row-control>span { color:#344054; }
+.toggle-row { background:#d0d5dd; border:0; }
+.toggle-row.active { background:#e3192b; }
+.stepper-input { border-color:#d0d5dd; background:#fff; }
+.stepper-input button { color:#475467; background:#f8f9fb; border:0; }
+.stepper-input button:hover { background:#eef1f4; }
+.stepper-input input { color:#17202b; background:#fff; }
+.cabinet-options { gap:8px; }
+.cabinet-option { border-color:#e1e5ea; background:#fff; }
+.cabinet-option label,.cabinet-option label small { color:#667085; }
+.cabinet-option strong { color:#17202b; }
+.compare-wrap { margin-top:16px; min-height:410px; border:1px solid #e1e5ea; border-radius:12px; background:linear-gradient(90deg,rgba(71,84,103,.045) 1px,transparent 1px),linear-gradient(0deg,rgba(71,84,103,.045) 1px,transparent 1px),#fff; background-size:28px 28px; }
+.comparison-stage { height:410px; }
+.floor { background:#cfd5dd; }
+.screen-compare { border-color:#cfd5dd; background-color:#f2f4f7; box-shadow:0 12px 28px rgba(16,24,40,.12); }
+.screen-compare img { mix-blend-mode:multiply; opacity:.82; }
+.screen-cell { border-color:rgba(255,255,255,.38); background:transparent; }
+.dim-label { color:#344054; text-shadow:none; }
+.dim-diagonal { color:#d91028; }
+.final-product-card { margin-top:12px; padding:0; gap:0; border-color:#e1e5ea; border-radius:12px; background:#fff; overflow:hidden; }
+.final-product-card div { padding:14px 16px; border:0; border-right:1px solid #eceff2; border-radius:0; background:#fff; }
+.final-product-card .summary-heading { grid-column:1 / -1; padding:13px 16px; color:#101828; border-right:0; border-bottom:1px solid #e1e5ea; background:#f8fafc; letter-spacing:0; text-transform:none; }
+.final-product-card .summary-heading strong { color:#101828; font-size:13px; line-height:1.25; }
+.final-product-card .summary-heading span { margin-top:3px; color:#667085; font-size:11px; font-weight:500; letter-spacing:0; text-transform:none; }
+.final-product-card div:last-child { border-right:0; }
+.final-product-card strong { color:#101828; font-size:16px; }
+.final-product-card span { color:#667085; font-size:10px; letter-spacing:.03em; }
+.diagram-page { grid-template-columns:minmax(280px,340px) minmax(0,1fr); align-items:start; }
+.config-card { position:sticky; top:12px; }
+.diagram-card { min-height:680px; }
+.control-summary { grid-template-columns:1fr; gap:0; margin-top:0; padding:4px 14px; border:1px solid #e1e5ea; border-radius:10px; background:#f8fafc; }
+.summary-card { grid-template-columns:1fr 1fr; gap:12px; padding:11px 0; border:0; border-bottom:1px solid #e1e5ea; border-radius:0; background:transparent; }
+.summary-card:last-child { border-bottom:0; }
+.summary-card span { color:#667085; font-size:10px; }
+.summary-card strong { color:#17202b; font-size:13px; text-align:right; }
+.brand-kicker,.product-search-panel>label,.cabinet-option label,.final-product-card span,.summary-card span,.paper-head h2,.letterhead-footer .footer-brand,.wiring-appendix .letterhead-footer .footer-brand,.wiring-appendix header strong,.appendix-summary span { text-transform:none; letter-spacing:0; }
+.diagram-tools { margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid #eceff2; }
+.diagram-title h2 { color:#101828; font-size:20px; }
+.wiring-board { min-height:540px; border-color:#e1e5ea; border-radius:10px; background:linear-gradient(90deg,rgba(71,84,103,.045) 1px,transparent 1px),linear-gradient(0deg,rgba(71,84,103,.045) 1px,transparent 1px),#fbfcfd; background-size:24px 24px; }
+.cab { color:#17202b; border-color:#cfd5dd; background:#fff; }
+.cab.power-start { border-color:#e3192b; box-shadow:inset 0 0 0 1px rgba(227,25,43,.12); }
+.cab.data-start { border-color:#2783e8; box-shadow:inset 0 0 0 1px rgba(39,131,232,.12); }
+.run-label { padding:0; border-radius:0; background:transparent!important; }
+.run-label.power { color:#d91028; }
+.run-label.data { color:#1e6fb9; }
+.legend { color:#667085; }
+.controller-box { color:#17202b; border-color:#e1e5ea; border-radius:9px; background:#fff; }
+.processor-canvas-card { border-color:#e1e5ea; border-radius:10px; background:#fff; }
+.processor-canvas-card h3 { color:#101828; }
+.processor-canvas-meta { color:#667085; }
+.processor-canvas-frame { border-color:#d9dee5; background:linear-gradient(90deg,rgba(71,84,103,.05) 1px,transparent 1px),linear-gradient(0deg,rgba(71,84,103,.05) 1px,transparent 1px),#f8fafc; background-size:22px 22px; }
+.processor-mini-cell { border-color:rgba(255,255,255,.58); color:#111827; text-shadow:0 1px 0 rgba(255,255,255,.35); }
+.quote-panel { background:#eef1f4; }
+.quote-controls { border-color:#e1e5ea; background:#fff; box-shadow:none; }
+.page-actions { margin:18px -24px -34px; padding:14px 24px; background:rgba(255,255,255,.96); border-top:1px solid #e1e5ea; box-shadow:0 -6px 20px rgba(16,24,40,.04); }
+.page-actions button { min-height:46px; }
+.page-actions .btn-primary { min-width:168px; }
+@media (max-width:1180px) {
+    .topbar { grid-template-columns:1fr; padding-top:12px; padding-bottom:12px; }
+    .steps { justify-self:stretch; max-width:none; }
+    .diagram-page { grid-template-columns:1fr; }
+    .config-card { position:static; }
+    .control-summary { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 20px; }
+}
+@media (max-width:720px) {
+    .app-shell { padding:0 10px 24px; }
+    .topbar { margin:0 -10px 14px; padding:10px; }
+    .brand { justify-content:center; }
+    .brand img { width:80px; }
+    .brand h1 { font-size:17px; }
+    .steps { gap:0; }
+    .step { min-height:46px; }
+    .panel-inner,.config-card,.diagram-card { padding:16px; }
+    .category-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .category-card { grid-template-rows:72px auto; padding:6px; }
+    .product-parameter-grid { grid-template-columns:1fr; }
+    .selected-product-hero { min-height:170px; }
+    .compare-wrap,.comparison-stage { min-height:310px; height:310px; }
+    .control-summary { grid-template-columns:1fr; }
+    .diagram-tools { align-items:flex-start; }
+    .wiring-board { min-height:360px; }
+    .final-product-card { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .final-product-card div { border-right:0; border-bottom:1px solid #eceff2; }
+    .page-actions { margin:14px -10px -24px; padding:10px; }
+}
+@media (max-width:480px) {
+    .brand { justify-content:flex-start; }
+    .brand-kicker { font-size:9px; }
+    .step span { display:block; font-size:10px; }
+    .step { padding-inline:2px; }
+    .step::before { flex-basis:24px; height:24px; }
+    .section-title { font-size:18px; }
+    .category-card span { display:none; }
+    .form-grid { gap:12px; }
+    .diagram-card { padding-inline:10px; }
+    .wiring-board { padding:4px; }
+}
 @page { size: A4 portrait; margin: 0; }
 @media print {
     body { background: #fff; margin: 0; padding: 30mm 28mm 30mm 24.5mm; }
@@ -1286,7 +1456,7 @@ body.show-wiring #wiringPages {
     <section class="page active" id="page-product">
         <div class="panel">
             <div class="panel-inner">
-                <h2 class="section-title">Select Product Category</h2>
+                <h2 class="section-title">Select product category</h2>
                 <div class="category-row" id="categoryRow"></div>
             </div>
         </div>
@@ -1294,7 +1464,7 @@ body.show-wiring #wiringPages {
         <div class="product-parameter-grid">
             <div class="panel product-display">
                 <div class="panel-inner" style="padding-bottom:0;">
-                    <h2 class="section-title">Select Product</h2>
+                    <h2 class="section-title">Select product</h2>
                 </div>
                 <div class="selected-product-hero">
                     <img id="selectedProductImage" src="images/category-fix-install.jpg" alt="Selected product">
@@ -1317,10 +1487,15 @@ body.show-wiring #wiringPages {
 
             <div class="panel parameter-panel">
                 <div class="panel-inner">
-                    <h2 class="section-title">Select Parameter</h2>
+                    <h2 class="section-title">Select parameters</h2>
+                    <div class="field installation-field">
+                        <label for="installationMethodSelect">Installation method</label>
+                        <select id="installationMethodSelect"></select>
+                    </div>
+                    <div class="settings-group-title">Display layout</div>
                     <div class="field">
                         <div class="screen-size-heading">
-                            <label>Screen Size</label>
+                            <label>Screen size</label>
                         </div>
                         <div class="mode-tabs-row">
                             <div class="mode-tabs" id="sizeModeTabs">
@@ -1335,11 +1510,11 @@ body.show-wiring #wiringPages {
                     </div>
                     <div class="form-grid" id="areaInputs" style="display:none;">
                         <div class="field">
-                            <label>Wall Width (m)</label>
+                            <label>Wall width (m)</label>
                             <div class="stepper-input"><button data-step-target="widthM" data-delta="-0.1" type="button">−</button><input id="widthM" type="number" min="0.1" step="0.1" value="9"><button data-step-target="widthM" data-delta="0.1" type="button">+</button></div>
                         </div>
                         <div class="field">
-                            <label>Wall Height (m)</label>
+                            <label>Wall height (m)</label>
                             <div class="stepper-input"><button data-step-target="heightM" data-delta="-0.1" type="button">−</button><input id="heightM" type="number" min="0.1" step="0.1" value="5"><button data-step-target="heightM" data-delta="0.1" type="button">+</button></div>
                         </div>
                     </div>
@@ -1352,10 +1527,6 @@ body.show-wiring #wiringPages {
                             <label>Row</label>
                             <div class="stepper-input"><button data-step-target="rowsInput" data-delta="-1" type="button">−</button><input id="rowsInput" type="number" min="1" step="1" value="18"><button data-step-target="rowsInput" data-delta="1" type="button">+</button></div>
                         </div>
-                        <div class="half-row-control" id="halfRowControl">
-                            <span>Last: Half panel</span>
-                            <button class="toggle-row" id="halfRowToggle" type="button" aria-pressed="false"><span></span></button>
-                        </div>
                     </div>
                     <div class="field" style="margin-top:16px;">
                         <label>Unit</label>
@@ -1366,7 +1537,7 @@ body.show-wiring #wiringPages {
                         <div class="unit-static" id="unitStatic">pcs</div>
                     </div>
                     <div class="field">
-                        <label>Fixed Aspect Ratio</label>
+                        <label>Fixed aspect ratio</label>
                         <div class="aspect-tabs" id="aspectTabs">
                             <button class="active" type="button" data-aspect="16:9">16:9</button>
                             <button type="button" data-aspect="21:9">21:9</button>
@@ -1397,7 +1568,7 @@ body.show-wiring #wiringPages {
 
     <section class="page diagram-page" id="page-power">
         <div class="panel config-card">
-            <h2 class="section-title">Power Settings</h2>
+            <h2 class="section-title">Power settings</h2>
             <div class="form-grid">
                 <div class="field">
                     <label>Voltage</label>
@@ -1414,14 +1585,14 @@ body.show-wiring #wiringPages {
                     </select>
                 </div>
                 <div class="field">
-                    <label>Wiring Direction</label>
+                    <label>Wiring direction</label>
                     <select id="powerRouteSelect">
                         <option value="vertical">Top to Bottom</option>
                         <option value="horizontal">Left to Right</option>
                     </select>
                 </div>
                 <div class="field">
-                    <label>Power Cable Length</label>
+                    <label>Power cable length</label>
                     <select id="powerCableLength">
                         <option value="10">10 m recommended</option>
                         <option value="5">5 m</option>
@@ -1429,12 +1600,14 @@ body.show-wiring #wiringPages {
                     </select>
                 </div>
             </div>
+            <div class="settings-group-title">Calculated power summary</div>
+            <p class="summary-note">Read-only results calculated from the settings above.</p>
             <div class="control-summary" id="powerSummary"></div>
         </div>
         <div class="panel diagram-card">
             <div class="diagram-tools">
                 <div class="diagram-title">
-                    <h2>Power Wiring Diagram</h2>
+                    <h2>Power wiring diagram</h2>
                     <p>Live preview based on voltage, current, route, and cabinet count.</p>
                 </div>
                 <span class="muted" id="powerDiagramMeta">-</span>
@@ -1445,10 +1618,10 @@ body.show-wiring #wiringPages {
 
     <section class="page diagram-page" id="page-processing">
         <div class="panel config-card">
-            <h2 class="section-title">Processing Settings</h2>
+            <h2 class="section-title">Processing settings</h2>
             <div class="form-grid">
                 <div class="field">
-                    <label>Control System</label>
+                    <label>Control system</label>
                     <select id="systemSelect"></select>
                 </div>
                 <div class="field">
@@ -1461,7 +1634,7 @@ body.show-wiring #wiringPages {
                     <input type="hidden" id="canvasSelect" value="4K">
                 </div>
                 <div class="field" id="fiberBoxField">
-                    <label>Fiber Box</label>
+                    <label>Fiber box</label>
                     <select id="fiberBoxSelect"></select>
                 </div>
                 <div class="field">
@@ -1475,19 +1648,21 @@ body.show-wiring #wiringPages {
                     </select>
                 </div>
                 <div class="field">
-                    <label>Wiring Method</label>
+                    <label>Wiring method</label>
                     <select id="dataRouteSelect">
                         <option value="vertical">Top to Bottom</option>
                         <option value="horizontal">Left to Right</option>
                     </select>
                 </div>
             </div>
+            <div class="settings-group-title">Calculated processing summary</div>
+            <p class="summary-note">Read-only results calculated from the settings above.</p>
             <div class="control-summary" id="processingSummary"></div>
         </div>
         <div class="panel diagram-card">
             <div class="diagram-tools">
                 <div class="diagram-title">
-                    <h2>Network Wiring Diagram</h2>
+                    <h2>Network wiring diagram</h2>
                     <p>Live data runs from processor outputs to the display.</p>
                 </div>
                 <span class="muted" id="networkDiagramMeta">-</span>
@@ -1575,6 +1750,3 @@ body.show-wiring #wiringPages {
 <script src="quotation-script.js"></script>
 </body>
 </html>
-
-
-

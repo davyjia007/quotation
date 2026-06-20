@@ -204,6 +204,31 @@
         .right-panel .a4-page { box-sizing:border-box; width:794px; height:1120px; padding:114px 106px 114px 93px; background:#fff url("images/roe-letterhead-a4.png") center / 100% 100% no-repeat; border-radius:0; }
         body.embedded-report .right-panel .a4-page { padding:96px 36px 104px; }
         .right-panel .report-page-header, .right-panel .report-page-footer { display:none; }
+        /* Precision White standalone mapping workspace */
+        body:not(.embedded-report):not(.pdf-exporting) { background:#f5f6f8; color:#17202b; padding:16px; }
+        body:not(.embedded-report):not(.pdf-exporting) .design-dashboard { grid-template-columns:300px minmax(0,1fr); gap:16px; }
+        body:not(.embedded-report):not(.pdf-exporting) .config-panel { position:sticky; top:16px; align-self:start; background:#fff; border:1px solid #e1e5ea; border-radius:12px; padding:18px; box-shadow:none; backdrop-filter:none; }
+        body:not(.embedded-report):not(.pdf-exporting) .section-title { color:#101828; margin:18px 0 12px; padding:0; border:0; font-size:.82rem; letter-spacing:0; }
+        body:not(.embedded-report):not(.pdf-exporting) label { color:#475467; font-weight:700; }
+        body:not(.embedded-report):not(.pdf-exporting) select,
+        body:not(.embedded-report):not(.pdf-exporting) input { color:#17202b; background:#fff; border:1px solid #d0d5dd; border-radius:8px; min-height:40px; }
+        body:not(.embedded-report):not(.pdf-exporting) select:focus,
+        body:not(.embedded-report):not(.pdf-exporting) input:focus { border-color:#e3192b; outline:3px solid rgba(227,25,43,.12); }
+        body:not(.embedded-report):not(.pdf-exporting) .toggle-item { color:#344054; background:#f8f9fb; border:1px solid #d0d5dd; border-radius:8px; }
+        body:not(.embedded-report):not(.pdf-exporting) .toggle-item:has(input:checked) { color:#d91028; background:#fff5f6; border-color:#e3192b; }
+        body:not(.embedded-report):not(.pdf-exporting) .btn-primary { color:#fff; background:#e3192b; border:1px solid #e3192b; border-radius:8px; box-shadow:none; }
+        body:not(.embedded-report):not(.pdf-exporting) .btn-secondary { color:#344054; background:#fff; border:1px solid #d0d5dd; border-radius:8px; }
+        body:not(.embedded-report):not(.pdf-exporting) .right-panel { min-width:0; }
+        body:not(.embedded-report):not(.pdf-exporting) .a4-page { border:1px solid #e1e5ea; border-radius:10px; box-shadow:none; }
+        body:not(.embedded-report):not(.pdf-exporting) .stats-grid { border:1px solid #e1e5ea; border-radius:10px; box-shadow:none; }
+        body:not(.embedded-report):not(.pdf-exporting) .stat-card { border-left-color:#e3192b; border-radius:6px; }
+        body:not(.embedded-report):not(.pdf-exporting) .cabling-canvas { border-color:#e1e5ea; border-radius:10px; box-shadow:none; }
+        @media (max-width:780px) {
+            body:not(.embedded-report):not(.pdf-exporting) { padding:8px; }
+            body:not(.embedded-report):not(.pdf-exporting) .design-dashboard { grid-template-columns:1fr; }
+            body:not(.embedded-report):not(.pdf-exporting) .config-panel { position:static; }
+        }
+
     </style>
 </head>
 <body>
@@ -231,10 +256,18 @@
         </div>
         
         <div class="selector-group">
-            <label>&#128256; &#36208;&#32447;&#26041;&#21521;</label>
+            <label>Power Wiring Direction</label>
+            <select id="powerRouteDirectionSelect">
+                <option value="vertical" selected>Top to Bottom</option>
+                <option value="horizontal">Left to Right</option>
+            </select>
+        </div>
+
+        <div class="selector-group">
+            <label>Data Wiring Direction</label>
             <select id="routeDirectionSelect">
-                <option value="vertical" selected>&#31446;&#21521;&#36208;&#32447;&#65288;Rental/Cecoceco&#65289;</option>
-                <option value="horizontal">&#27178;&#21521;&#36208;&#32447;&#65288;Fix Install&#65289;</option>
+                <option value="vertical" selected>Top to Bottom</option>
+                <option value="horizontal">Left to Right</option>
             </select>
         </div>
 
@@ -289,6 +322,8 @@ let _currentBandwidth = "1G";
 let _currentProductCategory = "";
 let _routeManualOverride = false;
 let _routeLocked = false;
+let _powerRouteManualOverride = false;
+let _powerRouteLocked = false;
 let _masterCanvasManualOverride = false;
 let _lastMasterCanvasModelKey = "";
 let lastMatrix = null;
@@ -658,8 +693,22 @@ return [
 ];
 }
 
+function sentenceCaseLabel(value) {
+    const text = String(value || '').trim();
+    return text ? text.charAt(0).toUpperCase() + text.slice(1).toLowerCase() : '';
+}
+
+function pdfFittedFontSize(pdf, text, maxWidth, preferred, minimum) {
+    let size = preferred;
+    pdf.setFontSize(size);
+    const width = Math.max(0.01, pdf.getTextWidth(String(text || '')));
+    if (width > maxWidth) size = Math.max(minimum, preferred * maxWidth / width);
+    pdf.setFontSize(size);
+    return size;
+}
+
 function renderSummaryColumnHtml(items) {
-    return items.map(item => `<div class="summary-entry"><div class="summary-label">${item.label}</div><div class="summary-value">${item.value}</div></div>`).join('');
+    return items.map(item => `<div class="summary-entry"><div class="summary-label">${sentenceCaseLabel(item.label)}</div><div class="summary-value">${item.value}</div></div>`).join('');
 }
 
 function renderInfoStripHtml(cards) {
@@ -773,18 +822,20 @@ function pdfDrawMiniSummary(pdf, title, items, x, y, w, columns = 4) {
 
 function pdfDrawInfoStrip(pdf, cards, x, y, w, columns = 4) {
     const gap = 2;
-    const cardH = 11;
+    const cardH = 9.6;
     const h = cardH;
     const cardW = (w - gap * (columns - 1)) / columns;
     const drawEntry = (item, itemX, itemY, maxWidth) => {
         pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(4.4);
+        const label = sentenceCaseLabel(item.label);
+        pdfFittedFontSize(pdf, label, maxWidth, 4.1, 3.1);
         pdf.setTextColor(100, 116, 139);
-        pdf.text(item.label, itemX, itemY, { maxWidth });
+        pdf.text(label, itemX, itemY);
         pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(5.4);
+        const value = String(item.value);
+        pdfFittedFontSize(pdf, value, maxWidth, 5, 3.3);
         pdf.setTextColor(17, 24, 39);
-        pdf.text(String(item.value), itemX, itemY + 3.1, { maxWidth });
+        pdf.text(value, itemX, itemY + 2.8);
     };
     cards.slice(0, columns).forEach((card, cardIndex) => {
         const ix = x + cardIndex * (cardW + gap);
@@ -797,7 +848,7 @@ function pdfDrawInfoStrip(pdf, cards, x, y, w, columns = 4) {
         [card.left || [], card.right || []].forEach((entries, colIndex) => {
             const itemX = ix + colIndex * (cardW / 2) + 2;
             const step = entries.length >= 3 ? 3.8 : 5.5;
-            const startY = y + (entries.length >= 3 ? 3 : 4.2);
+            const startY = y + (entries.length >= 3 ? 2.6 : 3.7);
             entries.forEach((item, entryIndex) => drawEntry(item, itemX, startY + entryIndex * step, colW));
         });
     });
@@ -809,9 +860,15 @@ function normalizeProductCategory(category) {
     return (category || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+function selectedRouteDirection(mode = 'data') {
+    const id = mode === 'power' ? 'powerRouteDirectionSelect' : 'routeDirectionSelect';
+    return document.getElementById(id)?.value || 'vertical';
+}
+
 function applyRouteDefaults(productCategory, forceDefault) {
     const select = document.getElementById('routeDirectionSelect');
-    if (!select) return;
+    const powerSelect = document.getElementById('powerRouteDirectionSelect');
+    if (!select || !powerSelect) return;
     const category = normalizeProductCategory(productCategory);
     let defaultDirection = null;
     let locked = false;
@@ -826,9 +883,15 @@ function applyRouteDefaults(productCategory, forceDefault) {
     if (defaultDirection && (forceDefault || !_routeManualOverride || locked)) {
         select.value = defaultDirection;
     }
+    if (defaultDirection && (forceDefault || !_powerRouteManualOverride || locked)) {
+        powerSelect.value = defaultDirection;
+    }
     select.disabled = locked;
+    powerSelect.disabled = locked;
     _routeLocked = locked;
+    _powerRouteLocked = locked;
     if (locked) _routeManualOverride = false;
+    if (locked) _powerRouteManualOverride = false;
 }
 
 function updateBitRateOptions() {
@@ -1365,11 +1428,12 @@ function computeSystem() {
     
     let maxPower = getMaxPowerLoad(), unitPower = getFullPower();
     let maxPixels = getMaxPortPixels(), unitPixels = getFullPixelArea();
-    let direction = document.getElementById('routeDirectionSelect').value;
+    const dataDirection = selectedRouteDirection('data');
+    const powerDirection = selectedRouteDirection('power');
     
     // Assign power labels.
-    let powerLabels = assignLabelsByStrictRule(matrix, maxPower, unitPower, 'N', 'P', direction, MAX_PANELS_PER_POWER_FEED);
-    let portPlan = assignPortLabelsByControllerCanvas(matrix, maxPixels, unitPixels, direction);
+    let powerLabels = assignLabelsByStrictRule(matrix, maxPower, unitPower, 'N', 'P', powerDirection, MAX_PANELS_PER_POWER_FEED);
+    let portPlan = assignPortLabelsByControllerCanvas(matrix, maxPixels, unitPixels, dataDirection);
     let portLabels = portPlan.labels;
     let controllerIds = portPlan.controllerIds;
     
@@ -1403,7 +1467,7 @@ function computeSystem() {
         portLabel: portLabels[r][c]
     })));
 
-    const countCableSegments = (displayMatrix, labelField, idPrefix, includeController = false) => {
+    const countCableSegments = (displayMatrix, labelField, idPrefix, direction, includeController = false) => {
         const groups = {};
         for (let r = 0; r < displayMatrix.length; r++) {
             for (let c = 0; c < displayMatrix[0].length; c++) {
@@ -1433,18 +1497,18 @@ function computeSystem() {
         return { shortCount, jumperCount };
     };
 
-    const powerSegments = countCableSegments(lastMatrix, 'powerLabel', 'P');
-    const portSegments = countCableSegments(lastMatrix, 'portLabel', 'D', true);
+    const powerSegments = countCableSegments(lastMatrix, 'powerLabel', 'P', powerDirection);
+    const portSegments = countCableSegments(lastMatrix, 'portLabel', 'D', dataDirection, true);
     
     let totalResW = useCols * w;
     let totalResH = useRows * h + (hasHalfRow ? h/2 : 0);
    
     document.getElementById('statsGrid').innerHTML = `
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Total Resolution</div><div class="stat-value">${totalResW}x${Math.floor(totalResH)}</div></div><div class="stat-item"><div class="stat-label">Screen Size</div><div class="stat-value">${useCols} x ${useRows + (hasHalfRow ? 0.5 : 0)}</div></div></div>
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Master Canvas</div><div class="stat-value">${portPlan.canvas.key} <span style="font-size:0.7em;color:#9aa6b5">${portPlan.canvas.width}x${portPlan.canvas.height}</span></div></div><div class="stat-item"><div class="stat-label">Processors</div><div class="stat-value" style="color:#fde68a;">${portPlan.controllerSummaries.length}</div></div></div>
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Main Power</div><div class="stat-value" style="color:#ff7e6e;">${totalPowerCables}</div></div><div class="stat-item"><div class="stat-label">Main Data</div><div class="stat-value" style="color:#6bc8ff;">${totalPortCables}</div></div></div>
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Short Power</div><div class="stat-value" style="color:#ffb4a8;">${powerSegments.shortCount}</div></div><div class="stat-item"><div class="stat-label">Short Data</div><div class="stat-value" style="color:#9ddcff;">${portSegments.shortCount}</div></div></div>
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Power Jumpers</div><div class="stat-value" style="color:#ff7e6e;">${powerSegments.jumperCount}</div></div><div class="stat-item"><div class="stat-label">Data Jumpers</div><div class="stat-value" style="color:#46b7ff;">${portSegments.jumperCount}</div></div></div>
+        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Total resolution</div><div class="stat-value">${totalResW}x${Math.floor(totalResH)}</div></div><div class="stat-item"><div class="stat-label">Screen size</div><div class="stat-value">${useCols} x ${useRows + (hasHalfRow ? 0.5 : 0)}</div></div></div>
+        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Master canvas</div><div class="stat-value">${portPlan.canvas.key} <span style="font-size:0.7em;color:#9aa6b5">${portPlan.canvas.width}x${portPlan.canvas.height}</span></div></div><div class="stat-item"><div class="stat-label">Processors</div><div class="stat-value" style="color:#fde68a;">${portPlan.controllerSummaries.length}</div></div></div>
+        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Main power</div><div class="stat-value" style="color:#ff7e6e;">${totalPowerCables}</div></div><div class="stat-item"><div class="stat-label">Main data</div><div class="stat-value" style="color:#6bc8ff;">${totalPortCables}</div></div></div>
+        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Short power</div><div class="stat-value" style="color:#ffb4a8;">${powerSegments.shortCount}</div></div><div class="stat-item"><div class="stat-label">Short data</div><div class="stat-value" style="color:#9ddcff;">${portSegments.shortCount}</div></div></div>
+        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Power jumpers</div><div class="stat-value" style="color:#ff7e6e;">${powerSegments.jumperCount}</div></div><div class="stat-item"><div class="stat-label">Data jumpers</div><div class="stat-value" style="color:#46b7ff;">${portSegments.jumperCount}</div></div></div>
     `;
 
     document.getElementById('maxPixelsSpan').innerText = maxPixels.toLocaleString();
@@ -1614,7 +1678,8 @@ function drawCablingLines() {
     svg.setAttribute('viewBox', `0 0 ${Math.max(1, svgRect.width)} ${Math.max(1, svgRect.height)}`);
     svg.setAttribute('preserveAspectRatio', 'none');
 
-    let direction = document.getElementById('routeDirectionSelect').value;
+    const dataDirection = selectedRouteDirection('data');
+    const powerDirection = selectedRouteDirection('power');
     let powerGroups = {}, portGroups = {};
 
     for (let r = 0; r < lastMatrix.length; r++) {
@@ -1638,23 +1703,24 @@ function drawCablingLines() {
             const laneX = elementRect.width * 0.12;
             
             // 竖向：电源左/网线右，同高；横向：电源上/网线下，同X
-            const isVert = direction === 'vertical';
+            const powerIsVert = powerDirection === 'vertical';
+            const dataIsVert = dataDirection === 'vertical';
             let pMatch = cell.powerLabel.match(/P(\d+)-(\d+)/);
             if (pMatch) {
                 let id = pMatch[1], seq = parseInt(pMatch[2]);
                 if (!powerGroups[id]) powerGroups[id] = [];
-                powerGroups[id].push({ seq, x: isVert ? cx - laneX : cx, y: isVert ? cy : top + elementRect.height * 0.25, r: r, c: c, box });
+                powerGroups[id].push({ seq, x: powerIsVert ? cx - laneX : cx, y: powerIsVert ? cy : top + elementRect.height * 0.25, r: r, c: c, box });
             }
             let dMatch = cell.portLabel.match(/D(\d+)-(\d+)/);
             if (dMatch) {
                 let id = `M${cell.controllerId || 1}-D${dMatch[1]}`, seq = parseInt(dMatch[2]);
                 if (!portGroups[id]) portGroups[id] = [];
-                portGroups[id].push({ seq, x: isVert ? cx + laneX : cx, y: isVert ? cy : top + elementRect.height * 0.75, r: r, c: c, box });
+                portGroups[id].push({ seq, x: dataIsVert ? cx + laneX : cx, y: dataIsVert ? cy : top + elementRect.height * 0.75, r: r, c: c, box });
             }
         }
     }
     
-    const getTopologyPath = (p1, p2, laneOffset = 0) => {
+    const getTopologyPath = (p1, p2, laneOffset = 0, direction = 'vertical') => {
         const verticalMainInset = 0.28;
         const horizontalMainInset = 0.18;
         const sideInset = 0.18;
@@ -1703,13 +1769,13 @@ function drawCablingLines() {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
     };
 
-    const drawGroup = (groups, color, laneOffset) => {
+    const drawGroup = (groups, color, laneOffset, direction) => {
         for (let id in groups) {
             let pts = groups[id].sort((a,b) => a.seq - b.seq);
             if (pts.length <= 1) continue;
             for (let i = 1; i < pts.length; i++) {
                 let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                path.setAttribute("d", getTopologyPath(pts[i - 1], pts[i], laneOffset));
+                path.setAttribute("d", getTopologyPath(pts[i - 1], pts[i], laneOffset, direction));
                 path.setAttribute("stroke", color);
                 path.setAttribute("stroke-width", document.body.classList.contains('embedded-report') ? "1.15" : "2.2");
                 path.setAttribute("fill", "none");
@@ -1719,8 +1785,8 @@ function drawCablingLines() {
             }
         }
     };
-    drawGroup(powerGroups, "#e8382c", 0);
-    drawGroup(portGroups, "#007ee8", 0);
+    drawGroup(powerGroups, "#e8382c", 0, powerDirection);
+    drawGroup(portGroups, "#007ee8", 0, dataDirection);
 }
 
 // ======================= Processor Canvas  ?? ?=======================
@@ -2291,7 +2357,7 @@ function drawPowerMappingLines() {
     svg.setAttribute('viewBox', `0 0 ${Math.max(1, svgRect.width)} ${Math.max(1, svgRect.height)}`);
     svg.setAttribute('preserveAspectRatio', 'none');
 
-    const direction = document.getElementById('routeDirectionSelect').value;
+    const direction = selectedRouteDirection('power');
     const groups = {};
     for (let r = 0; r < lastMatrix.length; r++) {
         for (let c = 0; c < lastMatrix[0].length; c++) {
@@ -2450,7 +2516,7 @@ function renderProcessorCanvasesCanvasLegacyUnused() {
                     const idx = portIndex.get(portNum) ?? 0;
                     const fill = portFillColor(toneIndex, idx, localRow, localCol, document.getElementById('routeDirectionSelect')?.value, 'processor');
                     const fontSize = Math.max(6, Math.min(11, Math.min(cellW, rowHeights[r]) * 0.34));
-                    stageGrid += `<div style="width:${cellW}px;height:${rowHeights[r]}px;background:${fill};border:1px solid rgba(255,255,255,0.35);border-radius:2px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:${fontSize}px;font-family:'JetBrains Mono',monospace;font-weight:700;line-height:1.1;" title="屏体 [${r},${c}]">${r + 1},${c + 1}</div>`;
+                    stageGrid += `<div style="width:${cellW}px;height:${rowHeights[r]}px;background:${fill};border:1px solid rgba(255,255,255,0.35);border-radius:2px;display:flex;align-items:center;justify-content:center;color:#111827;font-size:${fontSize}px;font-family:'JetBrains Mono',monospace;font-weight:700;line-height:1.1;text-shadow:0 1px 0 rgba(255,255,255,.35);" title="屏体 [${r},${c}]">${r + 1},${c + 1}</div>`;
                 } else {
                     stageGrid += `<div style="width:${cellW}px;height:${rowHeights[r]}px;background:#f8fafc;border:1px solid #d8e0eb;border-radius:2px;"></div>`;
                 }
@@ -2662,7 +2728,7 @@ function renderProcessorCanvases() {
                     const portOrder = portIndex.get(portNum) ?? 0;
                     const fill = portFillColor(toneIndex, portOrder, localRow, localCol, document.getElementById('routeDirectionSelect')?.value, 'processor');
                     const fontSize = Math.max(6, Math.min(10, cellWidth * 0.27, rowHeight * 0.34));
-                    stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:${fill};border:1px solid rgba(255,255,255,0.35);border-radius:2px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:${fontSize}px;font-family:'JetBrains Mono',monospace;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,0.55);" title="${cell.portLabel}">${cell.portLabel}</div>`;
+                    stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:${fill};border:1px solid rgba(255,255,255,0.35);border-radius:2px;display:flex;align-items:center;justify-content:center;color:#111827;font-size:${fontSize}px;font-family:'JetBrains Mono',monospace;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-shadow:0 1px 0 rgba(255,255,255,.35);" title="${cell.portLabel}">${cell.portLabel}</div>`;
                 } else {
                     stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:#f8fafc;border:1px solid #d8e0eb;border-radius:2px;"></div>`;
                 }
@@ -2852,7 +2918,8 @@ function drawPdfTileLines(tile, matrix, mode) {
     const rowStart = parseInt(tile.dataset.rowStart || '0', 10);
     const colStart = parseInt(tile.dataset.colStart || '0', 10);
     const rowCount = Math.round(tile.children.length / Math.max(1, parseInt((tile.style.gridTemplateColumns.match(/repeat\((\d+)/) || [0, 1])[1], 10)));
-    const direction = document.getElementById('routeDirectionSelect').value;
+    const dataDirection = selectedRouteDirection('data');
+    const powerDirection = selectedRouteDirection('power');
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.style.position = 'absolute';
     svg.style.left = '0';
@@ -2880,8 +2947,8 @@ function drawPdfTileLines(tile, matrix, mode) {
                 if (!groupsPower[id]) groupsPower[id] = [];
                 groupsPower[id].push({
                     seq: parseInt(powerMatch[2], 10),
-                    x: mode === 'power' ? cx : direction === 'vertical' ? cx - 12 : cx,
-                    y: direction === 'horizontal' ? box.top + box.height * 0.25 : cy,
+                    x: mode === 'power' ? cx : powerDirection === 'vertical' ? cx - 12 : cx,
+                    y: powerDirection === 'horizontal' ? box.top + box.height * 0.25 : cy,
                     r, c, box
                 });
             }
@@ -2890,14 +2957,14 @@ function drawPdfTileLines(tile, matrix, mode) {
                 if (dataMatch) {
                     const id = `D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
-                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + 12 : cx, y: direction === 'vertical' ? cy : box.top + box.height * 0.75, r, c, box });
+                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: dataDirection === 'vertical' ? cx + 12 : cx, y: dataDirection === 'vertical' ? cy : box.top + box.height * 0.75, r, c, box });
                 }
             }
         }
     }
 
     const mid = (a, b) => (a + b) / 2;
-    const pathFor = (p1, p2, laneOffset = 0) => {
+    const pathFor = (p1, p2, laneOffset = 0, direction = 'vertical') => {
         const verticalMainInset = 0.28;
         const horizontalMainInset = 0.18;
         const sideInset = 0.18;
@@ -2935,13 +3002,13 @@ function drawPdfTileLines(tile, matrix, mode) {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
     };
 
-    const drawGroups = (groups, color, laneOffset, usePowerTone) => {
+    const drawGroups = (groups, color, laneOffset, usePowerTone, direction) => {
         Object.entries(groups).forEach(([id, points]) => {
             points.sort((a, b) => a.seq - b.seq);
             const stroke = usePowerTone ? powerMappingTone(id).line : color;
             for (let i = 1; i < points.length; i++) {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', pathFor(points[i - 1], points[i], laneOffset));
+                path.setAttribute('d', pathFor(points[i - 1], points[i], laneOffset, direction));
                 path.setAttribute('stroke', stroke);
                 path.setAttribute('stroke-width', mode === 'power' ? '2.1' : '2.3');
                 path.setAttribute('fill', 'none');
@@ -2953,8 +3020,8 @@ function drawPdfTileLines(tile, matrix, mode) {
         });
     };
 
-    drawGroups(groupsPower, '#e8382c', 0, mode === 'power');
-    if (mode === 'topology') drawGroups(groupsData, '#007ee8', 0, false);
+    drawGroups(groupsPower, '#e8382c', 0, mode === 'power', powerDirection);
+    if (mode === 'topology') drawGroups(groupsData, '#007ee8', 0, false, dataDirection);
 }
 
 function preparePdfDetailPages() {
@@ -3288,9 +3355,9 @@ function getPdfStatsData() {
         if (p) powerIds.add(p[1]);
         if (d) dataIds.add(d[1]);
     });
-    const countSegments = (labelField, prefix) => {
+    const countSegments = (labelField, prefix, mode) => {
         const groups = {};
-        const direction = document.getElementById('routeDirectionSelect')?.value || 'vertical';
+        const direction = selectedRouteDirection(mode);
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
                 const match = (lastMatrix[r][c][labelField] || '').match(new RegExp(`${prefix}(\\d+)-(\\d+)`));
@@ -3313,8 +3380,8 @@ function getPdfStatsData() {
         });
         return { shortCount, jumperCount };
     };
-    const powerSeg = countSegments('powerLabel', 'P');
-    const dataSeg = countSegments('portLabel', 'D');
+    const powerSeg = countSegments('powerLabel', 'P', 'power');
+    const dataSeg = countSegments('portLabel', 'D', 'data');
     return [
         ['Total Resolution', `${totalResW.toLocaleString()} x ${Math.floor(totalResH).toLocaleString()} px`],
         ['Master Canvas', `${canvas.key} ${canvas.width} x ${canvas.height} px`],
@@ -3342,7 +3409,7 @@ function pdfDrawStats(pdf, x, y, w) {
     const cols = 5;
     const gap = 2.2;
     const cardW = (w - gap * (cols - 1)) / cols;
-    const cardH = 13.5;
+    const cardH = 11.4;
     groups.forEach((group, index) => {
         const cx = x + index * (cardW + gap);
         const cy = y;
@@ -3357,13 +3424,14 @@ function pdfDrawStats(pdf, x, y, w) {
             const [label, value] = entry;
             const itemX = cx + col * (cardW / 2) + 2;
             pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(4.9);
+            const fittedLabel = sentenceCaseLabel(label);
+            pdfFittedFontSize(pdf, fittedLabel, cardW / 2 - 4, 4.2, 3.1);
             pdf.setTextColor(100, 116, 139);
-            pdf.text(label, itemX, cy + 4.2);
+            pdf.text(fittedLabel, itemX, cy + 3.7);
             pdf.setFont('helvetica', 'bold');
-            pdf.setFontSize(6.5);
+            pdfFittedFontSize(pdf, value, cardW / 2 - 4, 5.4, 3.4);
             pdf.setTextColor(17, 24, 39);
-            pdf.text(value, itemX, cy + 9.4, { maxWidth: cardW / 2 - 4 });
+            pdf.text(value, itemX, cy + 8.2);
         });
     });
     return cardH;
@@ -3519,7 +3587,8 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
     if (mode === 'power') top += pdfDrawInfoStrip(pdf, getPowerInfoItems(), margin, top, PW - margin * 2, 4) + 4;
     if (includeStats) top += pdfDrawStats(pdf, margin, top, PW - margin * 2) + 6;
     const layout = pdfGetMatrixLayout(lastMatrix, margin, top, PW - margin * 2, footerTop - top);
-    const direction = document.getElementById('routeDirectionSelect').value;
+    const dataDirection = selectedRouteDirection('data');
+    const powerDirection = selectedRouteDirection('power');
     const maps = getPdfControllerColorMaps(lastMatrix);
     const groupsPower = {};
     const groupsData = {};
@@ -3546,7 +3615,7 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 const toneIndex = maps.controllerIndexMap.get(cid) || 1;
                 const portNum = parseInt(cell.portLabel.match(/D(\d+)/)?.[1] || '1', 10);
                 const portIdx = maps.portIndexMap.get(cid)?.get(portNum) ?? 0;
-                const fill = portFillColor(toneIndex, portIdx, r, c, direction, 'topology');
+                const fill = portFillColor(toneIndex, portIdx, r, c, dataDirection, 'topology');
                 const fillRgb = pdfColorToRgb(fill);
                 pdf.setDrawColor(31, 41, 55);
                 pdf.setLineWidth(0.08);
@@ -3563,8 +3632,8 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 if (!groupsPower[id]) groupsPower[id] = [];
                 groupsPower[id].push({
                     seq: parseInt(powerMatch[2], 10),
-                    x: mode === 'power' ? cx : direction === 'vertical' ? cx - box.width * 0.18 : cx,
-                    y: direction === 'horizontal' ? box.top + box.height * 0.25 : cy,
+                    x: mode === 'power' ? cx : powerDirection === 'vertical' ? cx - box.width * 0.18 : cx,
+                    y: powerDirection === 'horizontal' ? box.top + box.height * 0.25 : cy,
                     r, c, box
                 });
             }
@@ -3573,14 +3642,14 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 if (dataMatch) {
                     const id = `D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
-                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: direction === 'vertical' ? cx + box.width * 0.18 : cx, y: direction === 'vertical' ? cy : box.top + box.height * 0.75, r, c, box });
+                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: dataDirection === 'vertical' ? cx + box.width * 0.18 : cx, y: dataDirection === 'vertical' ? cy : box.top + box.height * 0.75, r, c, box });
                 }
             }
             labels.push({ cell, x: cx, y: cy, box });
         }
     }
 
-    const drawGroups = (groups, color, laneOffset, powerTone, arrow) => {
+    const drawGroups = (groups, color, laneOffset, powerTone, arrow, direction) => {
         Object.entries(groups).forEach(([id, points]) => {
             points.sort((a, b) => a.seq - b.seq);
             const stroke = powerTone ? powerMappingTone(id).line : color;
@@ -3594,8 +3663,8 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
             }
         });
     };
-    drawGroups(groupsPower, '#e8382c', 0, mode === 'power', mode === 'power');
-    if (mode === 'topology') drawGroups(groupsData, '#007ee8', 0, false, false);
+    drawGroups(groupsPower, '#e8382c', 0, mode === 'power', mode === 'power', powerDirection);
+    if (mode === 'topology') drawGroups(groupsData, '#007ee8', 0, false, false, dataDirection);
 
     labels.forEach(({ cell, x, y, box }) => {
         if (mode === 'power') {
@@ -3779,7 +3848,7 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
 
     labels.forEach(item => {
         const fontSize = pdfAdaptiveLabelFont(pdf, lastMatrix, item.label, item.box, 4.8, 0.3);
-        pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#ffffff', 'bold');
+        pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#111827', 'bold');
     });
 }
 
@@ -3837,6 +3906,7 @@ function init() {
     document.getElementById('bitRateSelect').onchange = () => computeSystem();
     document.getElementById('voltageSelect').onchange = () => computeSystem();
     document.getElementById('routeDirectionSelect').onchange = () => { if (!_routeLocked) _routeManualOverride = true; computeSystem(); };
+    document.getElementById('powerRouteDirectionSelect').onchange = () => { if (!_powerRouteLocked) _powerRouteManualOverride = true; computeSystem(); };
     document.getElementById('masterCanvasSelect').onchange = () => { _masterCanvasManualOverride = true; computeSystem(); };
     document.getElementById('customCols').addEventListener('input', () => computeSystem());
     document.getElementById('customRows').addEventListener('input', () => computeSystem());
@@ -3853,7 +3923,7 @@ window.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SYNC_MAPPING') {
         if (window.parent !== window) document.body.classList.add('embedded-report');
         // 必须解构 hasHalfSupport
-        const { model, fullCount, system, bandwidth, pixelW, pixelH, power, hasHalfSupport, productCategory, cols, rows, halfRow, bitRate, voltageSpec, routeDirection, masterCanvas } = event.data;
+        const { model, fullCount, system, bandwidth, pixelW, pixelH, power, hasHalfSupport, productCategory, cols, rows, halfRow, bitRate, voltageSpec, routeDirection, powerRouteDirection, masterCanvas } = event.data;
         const hasExplicitDimensions = Number.isFinite(parseInt(cols, 10)) && Number.isFinite(parseInt(rows, 10));
         
         if (model) currentProductObj.model = model;
@@ -3868,6 +3938,7 @@ window.addEventListener('message', (event) => {
             const categoryChanged = incomingCategory !== _currentProductCategory;
             _currentProductCategory = incomingCategory;
             if (categoryChanged) _routeManualOverride = false;
+            if (categoryChanged) _powerRouteManualOverride = false;
             applyRouteDefaults(_currentProductCategory, categoryChanged);
         }
         
@@ -3893,6 +3964,13 @@ window.addEventListener('message', (event) => {
             if ([...routeSelect.options].some(option => option.value === routeDirection)) {
                 routeSelect.value = routeDirection;
                 _routeManualOverride = true;
+            }
+        }
+        if (powerRouteDirection) {
+            const powerRouteSelect = document.getElementById('powerRouteDirectionSelect');
+            if ([...powerRouteSelect.options].some(option => option.value === powerRouteDirection)) {
+                powerRouteSelect.value = powerRouteDirection;
+                _powerRouteManualOverride = true;
             }
         }
         if (masterCanvas) {
