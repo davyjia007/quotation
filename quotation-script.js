@@ -1,15 +1,15 @@
 ﻿let F = {
-    productCategory: "产品分类",
-    productName: "产品名称",
-    model: "产品型号",
-    materialCategory: "物料分类",
-    size: "尺寸",
-    system: "系统",
-    bandwidth: "带宽",
-    materialName: "物料名称",
+    productCategory: "Product Category",
+    productName: "Product Name",
+    model: "Product Model",
+    materialCategory: "Material Category",
+    size: "Size",
+    system: "System",
+    bandwidth: "Bandwidth",
+    materialName: "Part Name",
     sap: "SAP",
-    desc: "物料描述",
-    remark: "备注",
+    desc: "Chinese Description",
+    remark: "Note",
     ratio: "Ratio",
     englishDesc: "Description",
     price: "Price",
@@ -37,12 +37,30 @@ const pages = [
     { id: "summary", label: "Quote" }
 ];
 const validSystems = ["Brompton", "MVR", "Nova", "Colorlight", "Other System"];
-const sectionOrder = ["LED Screen", "Processor", "Cables", "Spare Parts for Free", "Spare Parts for Charged"];
+const sectionOrder = ["LED Screen", "Accessories", "Packing", "Processor", "Cables", "Spare Parts for Charged", "Spare Parts for Free"];
+const SCHEMATIC_TOKENS = Object.freeze({
+    cabinetFill: "#ffffff",
+    cabinetAltFill: "#f8fafc",
+    cabinetDataFill: "#f7faff",
+    cabinetBorder: "#cbd5e1",
+    power: "#e31b23",
+    data: "#1d4ed8",
+    jumper: "#111827",
+    label: "#111827"
+});
+const sectionDisplayName = section => ({
+    "LED Screen": "LED screen",
+    "Accessories": "Accessories",
+    "Packing": "Packing",
+    "Spare Parts for Charged": "Spare parts for charged",
+    "Spare Parts for Free": "Spare parts for free"
+}[section] || section);
 
 const state = {
     rows: [],
     page: "product",
     category: "Fixed Install",
+    installationMethod: "wall-mount",
     model: "",
     sizeMode: "grid",
     unit: "m",
@@ -75,20 +93,19 @@ const compact = value => String(value ?? "").replace(/\s+/g, " ").trim();
 
 function deriveFields(rows) {
     const keys = Object.keys(rows.find(row => row && Object.keys(row).length) || {});
-    const byName = name => keys.find(key => key.trim() === name) || name;
-    const byIndex = (index, fallback) => keys[index] || fallback;
+    const byName = (...names) => names.map(name => keys.find(key => key.trim() === name)).find(Boolean) || names[0];
     F = {
-        productCategory: byName("产品分类") || byIndex(0, "产品分类"),
-        productName: byName("产品名称") || byIndex(1, "产品名称"),
-        model: byName("产品型号") || byIndex(2, "产品型号"),
-        materialCategory: byName("物料分类") || byIndex(3, "物料分类"),
-        size: byName("尺寸") || byIndex(4, "尺寸"),
-        system: byName("系统") || byIndex(5, "系统"),
-        bandwidth: byName("带宽") || byIndex(6, "带宽"),
-        materialName: byName("物料名称") || byIndex(7, "物料名称"),
+        productCategory: byName("Product Category", "产品分类"),
+        productName: byName("Product Name", "产品名称"),
+        model: byName("Product Model", "产品型号"),
+        materialCategory: byName("Material Category", "物料分类"),
+        size: byName("Size", "尺寸"),
+        system: byName("System", "系统"),
+        bandwidth: byName("Bandwidth", "带宽"),
+        materialName: byName("Part Name", "物料名称"),
         sap: byName("SAP"),
-        desc: byName("物料描述") || byIndex(9, "物料描述"),
-        remark: byName("备注") || byIndex(10, "备注"),
+        desc: byName("Chinese Description", "物料描述"),
+        remark: byName("Note", "备注"),
         ratio: byName("Ratio"),
         power: byName("Power"),
         pixelW: byName("Pixel Width"),
@@ -178,6 +195,20 @@ function constrainedSpareQuantity(row, totalUnits, quantities) {
 
 function categoryInfo() { return categories.find(item => item.id === state.category) || categories[0]; }
 function sourceCategory(cat = categoryInfo()) { return cat.source || cat.id; }
+function installationOptions() {
+    return sourceCategory() === "Rental"
+        ? [{ value: "hanging", label: "Hanging" }, { value: "stacking", label: "Stacking" }]
+        : [{ value: "wall-mount", label: "Wall Mount" }];
+}
+function applyInstallationOptions(forceDefault = false) {
+    const select = $("installationMethodSelect");
+    if (!select) return;
+    const options = installationOptions();
+    if (forceDefault || !options.some(option => option.value === state.installationMethod)) state.installationMethod = options[0].value;
+    select.innerHTML = options.map(option => `<option value="${option.value}">${option.label}</option>`).join("");
+    select.value = state.installationMethod;
+    select.disabled = options.length === 1;
+}
 let powerRuleCategory = "";
 // Wiring direction and breaker-current rules per product category.
 function applyPowerCategoryRules() {
@@ -204,7 +235,7 @@ function applyPowerCategoryRules() {
     }
     select.disabled = locked;
     const directionLabel = select.closest(".field")?.querySelector("label");
-    if (directionLabel) directionLabel.textContent = "Wiring Direction";
+    if (directionLabel) directionLabel.textContent = "Wiring direction";
 
     const existingCurrents = [...currentSelect.options].map(option => Number(option.value));
     if (existingCurrents.join("|") !== allowedCurrents.join("|")) {
@@ -234,9 +265,7 @@ function applyProcessingRouteRules(forceDefault = false) {
     if (forceDefault || locked || !["vertical", "horizontal"].includes(select.value)) select.value = defaultValue;
     select.disabled = locked;
     const label = select.closest(".field")?.querySelector("label");
-    if (label) label.textContent = "Wiring Method";
-    const powerSelect = $("powerRouteSelect");
-    if (powerSelect && powerSelect.value !== select.value) powerSelect.value = select.value;
+    if (label) label.textContent = "Wiring method";
 }
 function categoryImage() { return categoryInfo().image; }
 function safeModelFile(model) { return String(model || "").replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+|_+$/g, "") || "product"; }
@@ -298,6 +327,7 @@ function categoryForRow(row) {
 function selectProductMatch(match) {
     if (!match) return;
     state.category = categoryForRow(match.row).id;
+    applyInstallationOptions(true);
     state.model = match.model;
     state.panelQtyTouched.clear();
     $("productSearchInput").value = match.model;
@@ -489,6 +519,7 @@ function defaultPrice(section, title) {
     if (section === "LED Screen") return 880;
     if (section === "Processor") return 4200;
     if (section === "Cables") return title.includes("Main") ? 68 : 18;
+    if (section === "Accessories" || section === "Packing") return 0;
     if (section === "Spare Parts for Charged") return 95;
     return 0;
 }
@@ -532,7 +563,80 @@ function fiberBoxQuantity() {
     return Math.ceil(Math.max(0, getStatNumber("Main Data", 0)) / capacity);
 }
 function selectedCableRow(pattern) {
-    return productRows().find(row => materialCategory(row) === "Cables" && pattern.test(compact(row[F.materialName])));
+    const candidates = productRows().filter(row => materialCategory(row) === "Cables" && pattern.test(compact(row[F.materialName])));
+    if (/data/i.test(pattern.source)) {
+        const bandwidth = compact($("bandwidthSelect")?.value);
+        return candidates.find(row => compact(row[F.bandwidth]) === bandwidth) ||
+            candidates.find(row => /2\.5G\/5G/i.test(compact(row[F.remark])) === /2\.5G|5G/i.test(bandwidth)) || candidates[0];
+    }
+    const country = compact($("countrySelect")?.value);
+    return candidates.find(row => compact(row[F.remark]).split(/[;,]/).map(item => item.trim()).includes(country)) || candidates[0];
+}
+function productionRows(category, installation = "") {
+    return productRows().filter(row => materialCategory(row) === category && (!installation || compact(row[F.size]).toLowerCase() === installation.toLowerCase()));
+}
+function rowWidthUnits(row) {
+    const text = `${row?.[F.ratio] || ""} ${row?.[F.englishDesc] || ""}`;
+    const match = text.match(/\b([12])W\b/i);
+    return match ? Number(match[1]) : 0;
+}
+function accessoryTitle(row) {
+    return cleanEnglish(row?.[F.englishDesc]) || cleanEnglish(row?.[F.materialName]) || "Installation accessory";
+}
+function addProductionItems(map) {
+    const cfg = displayConfig();
+    const size = physicalSize();
+    const quantities = layoutQuantities();
+
+    for (const row of productionRows("Packing")) {
+        const rowSize = normalizeSize(row[F.size]);
+        const panelQty = number(quantities[rowSize], 0);
+        const capacity = Math.max(1, spareRatio(row));
+        if (!panelQty) continue;
+        addItem(map, {
+            section: "Packing", title: englishName(row, "Panel packing"),
+            desc: englishDescription(row, `${capacity} ${rowSize.toLowerCase()} panels per package`),
+            qty: Math.ceil(panelQty / capacity), unit: "pcs", sort: 25,
+            key: `packing|${row[F.sap] || row[F.materialName]}|${rowSize}`,
+            price: row[F.price], sap: row[F.sap] || ""
+        });
+    }
+
+    const installation = state.installationMethod === "hanging" ? "Hanging" : "Stacking";
+    const rows = productionRows("Accessories", installation);
+    if (!rows.length) return;
+    const oneW = rows.find(row => rowWidthUnits(row) === 1 && /bar/i.test(`${row[F.englishDesc]} ${row[F.materialName]}`));
+    const twoW = rows.find(row => rowWidthUnits(row) === 2 && /bar/i.test(`${row[F.englishDesc]} ${row[F.materialName]}`));
+    const twoWQty = twoW ? Math.floor(cfg.cols / 2) : 0;
+    const oneWQty = oneW ? cfg.cols - twoWQty * 2 : 0;
+    [[twoW, twoWQty], [oneW, oneWQty]].forEach(([row, qty]) => {
+        if (!row || !qty) return;
+        addItem(map, {
+            section: "Accessories", title: accessoryTitle(row), desc: englishDescription(row), qty,
+            unit: "pcs", sort: installation === "Hanging" ? 22 : 23,
+            key: `accessory|${installation}|${row[F.sap] || row[F.materialName]}`,
+            price: row[F.price], sap: row[F.sap] || ""
+        });
+    });
+    if (installation !== "Stacking") return;
+
+    const supportColumns = size.heightM <= 4 ? Math.ceil((cfg.cols + 1) / 2) : cfg.cols;
+    rows.filter(row => !/bar/i.test(`${row[F.englishDesc]} ${row[F.materialName]}`)).forEach(row => {
+        const text = `${row[F.englishDesc]} ${row[F.materialName]}`.toLowerCase();
+        let qty = supportColumns;
+        if (text.includes("rear truss")) {
+            const unitM = number(text.match(/(\d+(?:\.\d+)?)\s*m\b/)?.[1], 1);
+            qty = supportColumns * Math.ceil(size.heightM / Math.max(.1, unitM));
+        } else if (text.includes("rear bridge")) {
+            qty = supportColumns * Math.ceil(size.heightM);
+        }
+        addItem(map, {
+            section: "Accessories", title: accessoryTitle(row), desc: englishDescription(row), qty,
+            unit: "pcs", sort: text.includes("base truss") ? 24 : text.includes("rear truss") ? 25 : 26,
+            key: `accessory|Stacking|${row[F.sap] || row[F.materialName]}`,
+            price: row[F.price], sap: row[F.sap] || ""
+        });
+    });
 }
 function computeItems() {
     const map = new Map();
@@ -552,6 +656,7 @@ function computeItems() {
             sap: spec.row?.[F.sap] || ""
         });
     });
+    addProductionItems(map);
     const processors = Math.max(1, getStatNumber("Processors", state.mappingReport?.controllerCount || 1));
     const mainProcessor = selectedProcessorRow();
     const processorModel = compact(mainProcessor?.[F.model]) || `${$("systemSelect").value} Processor`;
@@ -614,7 +719,7 @@ function computeItems() {
             qty,
             unit: "pcs",
             sort: free ? 50 : 60,
-            key: `spare|${row[F.sap] || row[F.materialName]}`,
+            key: `spare|${free ? "free" : "charged"}|${row[F.sap] || row[F.materialName]}`,
             price: charged ? row[F.price] : 0,
             sap: row[F.sap] || ""
         });
@@ -627,12 +732,13 @@ function setPage(page) {
     document.querySelectorAll(".page").forEach(node => node.classList.toggle("active", node.id === `page-${page}`));
     renderSteps();
     renderPageActions();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
     if (page === "summary") cloneWiringPages();
 }
 function renderSteps() {
     const current = pages.findIndex(page => page.id === state.page);
-    $("steps").innerHTML = pages.map((page, index) => `<button class="step ${index === current ? "active" : ""} ${index < current ? "done" : ""}" data-page="${page.id}" data-index="${index + 1}" type="button"><span>${page.label}</span></button>`).join("");
+    $("steps").innerHTML = pages.map((page, index) => `<button class="step ${index === current ? "active" : ""} ${index < current ? "done" : ""}" data-page="${page.id}" data-index="${index + 1}" type="button" aria-label="Step ${index + 1}: ${page.label}"${index === current ? ` aria-current="step"` : ""}><span>${page.label}</span></button>`).join("");
     $("steps").querySelectorAll("[data-page]").forEach(btn => btn.addEventListener("click", () => setPage(btn.dataset.page)));
 }
 function renderPageActions() {
@@ -654,6 +760,7 @@ function renderCategories() {
         `).join("");
         $("categoryRow").querySelectorAll("[data-category]").forEach(btn => btn.addEventListener("click", () => {
             state.category = btn.dataset.category;
+            applyInstallationOptions(true);
             state.panelQtyTouched.clear();
             ensureModelSelection();
             populateSystems();
@@ -663,7 +770,11 @@ function renderCategories() {
             renderAll();
         }));
     }
-    $("categoryRow").querySelectorAll("[data-category]").forEach(btn => btn.classList.toggle("active", btn.dataset.category === state.category));
+    $("categoryRow").querySelectorAll("[data-category]").forEach(btn => {
+        const active = btn.dataset.category === state.category;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-pressed", String(active));
+    });
 }
 function renderModels() {
     ensureModelSelection();
@@ -697,13 +808,18 @@ function renderModels() {
             renderAll();
         }));
     }
-    carousel.querySelectorAll("[data-model]").forEach(btn => btn.classList.toggle("active", btn.dataset.model === state.model));
+    carousel.querySelectorAll("[data-model]").forEach(btn => {
+        const active = btn.dataset.model === state.model;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-pressed", String(active));
+    });
     if ($("selectedProductImage").getAttribute("src") !== productImage()) $("selectedProductImage").src = productImage();
     $("selectedProductImage").decoding = "async";
     $("selectedProductImage").fetchPriority = "high";
     $("selectedProductImage").onerror = () => { $("selectedProductImage").onerror = null; $("selectedProductImage").src = imageFallback(); };
-    if ($("screenTexture").getAttribute("src") !== productImage()) $("screenTexture").src = productImage();
-    $("screenTexture").onerror = () => { $("screenTexture").onerror = null; $("screenTexture").src = imageFallback(); };
+    const displayTexture = "images/roe-display-background.png";
+    if ($("screenTexture").getAttribute("src") !== displayTexture) $("screenTexture").src = displayTexture;
+    $("screenTexture").onerror = () => { $("screenTexture").onerror = null; $("screenTexture").src = "images/roe-logo.jpg"; };
     $("selectedProductName").textContent = state.model ? `${state.model} / ${categoryInfo().label}` : "-";
     // Auto-scroll carousel to the active model
     if (carousel.dataset.activeModel !== state.model) requestAnimationFrame(() => {
@@ -905,7 +1021,7 @@ function populateFiberBoxOptions(preferDefault = false) {
     else {
         select.value = processingRowKey(boxes[0]);
     }
-    field.querySelector("label").textContent = required ? "Fiber Box (Required)" : "Fiber Box";
+    field.querySelector("label").textContent = required ? "Fiber box (required)" : "Fiber box";
 }
 function applyDefaultProcessingCanvas(preferDefaults = false) {
     populateProcessorOptions(preferDefaults);
@@ -978,7 +1094,7 @@ function renderProductInfo() {
     const cab = cabinetSize();
     const qty = layoutQuantities();
     const totalModules = Object.values(qty).reduce((sum, value) => sum + number(value, 0), 0);
-$("productInfoPanel").innerHTML = [
+$("productInfoPanel").innerHTML = `<div class="summary-heading"><strong>Configured display summary</strong><span>Read-only results calculated from your selections.</span></div>` + [
     [dimensionLabel(cab).split(" / ")[0], "Single panel dimension"],
     [`${cfg.cols} columns x ${size.displayRows} rows`, "Final cabinet layout"],
     [`${size.widthM.toFixed(2)}m x ${size.heightM.toFixed(2)}m`, "Final display size"],
@@ -1023,57 +1139,37 @@ function controllerLine(id) { return controllerStroke(id); }
 function powerMappingTone(labelOrId) {
     const match = String(labelOrId || "").match(/P(\d+)/);
     const index = match ? Math.max(0, Number(match[1]) - 1) : 0;
-    const cycle = Math.floor(index / 2) % 3;
     return {
-        fill: index % 2 === 0 ? "hsla(4, 78%, 55%, 0.26)" : "hsla(4, 78%, 55%, 0.07)",
-        border: `hsl(4, 74%, ${[68, 62, 72][cycle]}%)`,
-        line: `hsl(4, 82%, ${[47, 42, 52][cycle]}%)`
+        fill: index % 2 === 0 ? SCHEMATIC_TOKENS.cabinetFill : SCHEMATIC_TOKENS.cabinetAltFill,
+        border: SCHEMATIC_TOKENS.cabinetBorder,
+        line: SCHEMATIC_TOKENS.power
     };
 }
 // Matches mapping.html portFillColor() rules: per-controller hue with per-port variant
 function topologyFill(matrix, cell) {
-    const ids = [...new Set(matrix.flat().map(item => item?.controllerId || 1))].sort((a, b) => a - b);
-    // Single controller + topology context → transparent (same as mapping.html)
-    if (ids.length <= 1) return "transparent";
-    const ctrlId = cell?.controllerId || 1;
-    const toneIndex = ids.indexOf(ctrlId) + 1;
-    const tone = getControllerTone(toneIndex);
-    // Use raw port index (safePort) like mapping.html, not position within sorted-unique list
     const rawPort = Number(String(cell?.portLabel || "").match(/D(\d+)/)?.[1] || 0);
-    const variant = rawPort % 4;
-    const cycleLift = Math.floor(rawPort / 4) % 2;
-    const tones = [
-        { l: 50, s: 62, h: -3 },
-        { l: 66, s: 58, h: 2 },
-        { l: 55, s: 60, h: -2 },
-        { l: 70, s: 54, h: 3 },
-    ];
-    const c = tones[variant] || tones[0];
-    const lightness = Math.max(28, Math.min(82, c.l + cycleLift * 2));
-    const saturation = Math.max(24, Math.min(82, Math.round(tone.s * 0.58 + c.s * 0.42)));
-    if (tone.s === 0) return `hsl(210, ${Math.max(22, c.s - 10)}%, ${lightness}%)`;
-    return `hsl(${(tone.h + c.h + 360) % 360}, ${saturation}%, ${lightness}%)`;
+    return rawPort % 2 === 0 ? SCHEMATIC_TOKENS.cabinetFill : SCHEMATIC_TOKENS.cabinetDataFill;
 }
 // Border color always neutral gray like mapping.html's cab-module
 function dataBorderColor(surface = "light") {
-    return surface === "dark" ? "rgba(157,208,255,0.58)" : "rgba(31,41,55,0.18)";
+    return SCHEMATIC_TOKENS.cabinetBorder;
 }
 function powerStroke(run = 1) { return powerMappingTone(`P${run}`).line; }
 function routedWirePath(p1, p2, direction, laneOffset = 0, mainInset = 0.28) {
-    const sideInset = 0.18;
+    const edgeDepth = 0.12;
     const mid = (a, b) => (a + b) / 2;
     const isVert = direction === "vertical";
     if (isVert) {
         if (p1.c === p2.c && p1.r !== p2.r) {
             const down = p2.r > p1.r;
-            const startY = down ? p1.y + p1.box.height * mainInset : p1.y - p1.box.height * mainInset;
-            const endY = down ? p2.y - p2.box.height * mainInset : p2.y + p2.box.height * mainInset;
+            const startY = down ? p1.box.bottom - p1.box.height * edgeDepth : p1.box.top + p1.box.height * edgeDepth;
+            const endY = down ? p2.box.top + p2.box.height * edgeDepth : p2.box.bottom - p2.box.height * edgeDepth;
             return `M ${p1.x} ${startY} L ${p2.x} ${endY}`;
         }
         if (p1.c !== p2.c) {
             const right = p2.c > p1.c;
-            const startX = right ? p1.box.right - p1.box.width * sideInset : p1.box.left + p1.box.width * sideInset;
-            const endX = right ? p2.box.left + p2.box.width * sideInset : p2.box.right - p2.box.width * sideInset;
+            const startX = right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
+            const endX = right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
             const seamX = right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
             const startY = p1.y + laneOffset;
             const endY = p2.y + laneOffset;
@@ -1084,14 +1180,14 @@ function routedWirePath(p1, p2, direction, laneOffset = 0, mainInset = 0.28) {
     } else {
         if (p1.r === p2.r && p1.c !== p2.c) {
             const right = p2.c > p1.c;
-            const startX = right ? p1.x + p1.box.width * mainInset : p1.x - p1.box.width * mainInset;
-            const endX = right ? p2.x - p2.box.width * mainInset : p2.x + p2.box.width * mainInset;
+            const startX = right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
+            const endX = right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
             return `M ${startX} ${p1.y} L ${endX} ${p2.y}`;
         }
         if (p1.r !== p2.r) {
             const down = p2.r > p1.r;
-            const startY = down ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
-            const endY = down ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
+            const startY = down ? p1.box.bottom - p1.box.height * edgeDepth : p1.box.top + p1.box.height * edgeDepth;
+            const endY = down ? p2.box.top + p2.box.height * edgeDepth : p2.box.bottom - p2.box.height * edgeDepth;
             const seamY = (down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
             const startX = p1.x + laneOffset;
             const endX = p2.x + laneOffset;
@@ -1102,43 +1198,46 @@ function routedWirePath(p1, p2, direction, laneOffset = 0, mainInset = 0.28) {
     }
     return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
 }
-function wirePoint(item, cellW, cellH, gap, mode, direction, lane) {
+function wirePoint(item, cellW, rowHeights, gap, mode, direction, lane) {
     const left = item.c * (cellW + gap);
-    const top = item.r * (cellH + gap);
+    const cellH = rowHeights[item.r] || rowHeights[0] || cellW;
+    const top = rowHeights.slice(0, item.r).reduce((sum, height) => sum + height, 0) + item.r * gap;
     const box = { left, top, right: left + cellW, bottom: top + cellH, width: cellW, height: cellH };
     const cx = left + cellW / 2;
     const cy = top + cellH / 2;
-    const sideLane = mode === "power" ? -lane : lane;
-    const horizontalRatio = mode === "power" ? .25 : .75;
+    const sideLane = mode === "power" ? -cellW * .24 : cellW * .24;
+    const horizontalLane = top + cellH * (mode === "power" ? .22 : .78);
     return {
         r: item.r,
         c: item.c,
         x: direction === "vertical" ? cx + sideLane : cx,
-        y: direction === "vertical" ? cy : top + cellH * horizontalRatio,
+        y: direction === "vertical" ? cy : horizontalLane,
         box
     };
 }
-function renderWireSvg(matrix, mode, cellW, cellH, gap) {
+function renderWireSvg(matrix, mode, cellW, rowHeights, gap) {
     const groups = cableGroups(matrix, mode);
     const paths = [];
     const markers = [];
     const direction = mode === "data" ? ($("dataRouteSelect")?.value || "vertical") : ($("powerRouteSelect")?.value || "vertical");
-    const lane = Math.min(11, Math.max(4, Math.min(cellW, cellH) * .22));
+    const lane = Math.min(11, Math.max(3, Math.min(cellW, ...(rowHeights || [cellW])) * .2));
     Object.entries(groups).forEach(([groupId, points]) => {
-        const color = mode === "power" ? powerStroke(points[0]?.run) : "#1e80ff";
-        const markerId = `power-arrow-${groupId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-        if (mode === "power") markers.push(`<marker id="${markerId}" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="${color}"/></marker>`);
+        const color = mode === "power" ? SCHEMATIC_TOKENS.power : SCHEMATIC_TOKENS.data;
+        const markerId = `${mode}-arrow-${groupId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+        markers.push(`<marker id="${markerId}" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="${color}"/></marker>`);
         for (let i = 1; i < points.length; i++) {
             const a = points[i - 1], b = points[i];
-            const p1 = wirePoint(a, cellW, cellH, gap, mode, direction, lane);
-            const p2 = wirePoint(b, cellW, cellH, gap, mode, direction, lane);
+            const p1 = wirePoint(a, cellW, rowHeights, gap, mode, direction, lane);
+            const p2 = wirePoint(b, cellW, rowHeights, gap, mode, direction, lane);
             const d = routedWirePath(p1, p2, direction, 0, mode === "power" ? 0.18 : 0.28);
-            paths.push(`<path d="${d}" stroke="${color}" stroke-width="${mode === "power" ? 2 : 1.7}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"${mode === "power" ? ` marker-end="url(#${markerId})"` : ""}/>`);
+            const jumper = direction === "horizontal" ? a.r !== b.r : a.c !== b.c;
+            const stroke = color;
+            paths.push(`<path d="${d}" stroke="${stroke}" stroke-width="${jumper ? 1.9 : mode === "power" ? 1.75 : 1.55}" fill="none" stroke-linecap="square" stroke-linejoin="miter" opacity=".96"${jumper ? ` stroke-dasharray="5 4"` : ""} marker-end="url(#${markerId})"/>`);
         }
     });
     const width = (matrix[0]?.length || 1) * cellW + Math.max(0, (matrix[0]?.length || 1) - 1) * gap;
-    const height = matrix.length * cellH + Math.max(0, matrix.length - 1) * gap;
-    return `<svg class="wire-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><defs>${markers.join("")}</defs>${paths.join("")}</svg>`;
+    const height = rowHeights.reduce((sum, value) => sum + value, 0) + Math.max(0, matrix.length - 1) * gap;
+    return `<svg class="wire-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="overflow:visible"><defs>${markers.join("")}</defs>${paths.join("")}</svg>`;
 }
 function renderBoard(targetId, mode) {
     const cfg = displayConfig();
@@ -1149,16 +1248,21 @@ function renderBoard(targetId, mode) {
     const cols = matrixRows ? matrixRows[0]?.length || cfg.cols : cfg.cols;
     const startCount = mode === "power" ? getStatNumber("Main Power", number(stats["Main Power"], 1)) : getStatNumber("Main Data", number(stats["Main Data"], 1));
     const cab = cabinetSize();
-    const ratio = Math.max(.25, Math.min(2.8, cab.h / Math.max(1, cab.w)));
+    const unitDisplayW = matrixRows?.[0]?.[0]?.displayW || cab.w || 1;
+    const fallbackRatio = cab.h / Math.max(1, cab.w);
+    const rowRatios = Array.from({ length: rows }, (_, r) => {
+        const displayH = matrixRows?.[r]?.[0]?.displayH;
+        return Math.max(.125, displayH ? displayH / unitDisplayW : (r === rows - 1 && cfg.halfRow ? fallbackRatio / 2 : fallbackRatio));
+    });
     const cellW = Math.max(16, Math.min(42, Math.floor(720 / Math.max(1, cols))));
-    const cellH = Math.max(12, Math.min(54, Math.round(cellW * ratio)));
-    const gap = cols > 24 ? 3 : 5;
+    const rowHeights = rowRatios.map(ratio => Math.max(4, Math.round(cellW * ratio)));
+    const gap = cols > 24 ? 4 : 8;
     const displayMatrix = matrixRows || Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => ({ r, c })));
-    let html = `<div class="run-label ${mode}">${mode === "power" ? "Power Runs" : "Data Runs"}: ${startCount}</div>`;
-    html += `<div class="legend"><span class="${mode === "power" ? "power-dot" : "data-dot"}">${mode === "power" ? "Power route" : "Data route"}</span><span>${cfg.cols} x ${cfg.rows} | panel ${cab.w} x ${cab.h} mm</span></div>`;
-    html += `<div class="wiring-map" style="--cell-w:${cellW}px;--cell-h:${cellH}px;">`;
-    if (matrixRows) html += renderWireSvg(displayMatrix, mode, cellW, cellH, gap);
-    html += `<div class="cabinet-grid" style="grid-template-columns:repeat(${cols}, ${cellW}px);gap:${gap}px;">`;
+    const legendMeta = $(`${mode}DiagramLegendMeta`);
+    if (legendMeta) legendMeta.textContent = `${mode === "power" ? "Power" : "Data"} runs: ${startCount} · ${cfg.cols} x ${cfg.rows} · panel ${cab.w} x ${cab.h} mm`;
+    let html = `<div class="wiring-map" style="--cell-w:${cellW}px;">`;
+    if (matrixRows) html += renderWireSvg(displayMatrix, mode, cellW, rowHeights, gap);
+    html += `<div class="cabinet-grid" style="grid-template-columns:repeat(${cols}, ${cellW}px);grid-template-rows:${rowHeights.map(height => `${height}px`).join(" ")};gap:${gap}px;">`;
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             const cell = matrixRows?.[r]?.[c];
@@ -1173,7 +1277,9 @@ function renderBoard(targetId, mode) {
                     ? `background:${powerMappingTone(cell.powerLabel).fill};border-color:${powerMappingTone(cell.powerLabel).border};`
                     : `background:${topologyFill(displayMatrix, cell)};border-color:${dataBorderColor("dark")};`
                 : "";
-            html += `<div class="cab ${klass}" style="width:${cellW}px;height:${cellH}px;font-size:${Math.max(8, Math.min(10, cellW * .24))}px;${colorStyle}">${escapeHtml(label || (fallbackStart ? (mode === "power" ? `P${fallbackLinear + 1}` : `D${fallbackLinear + 1}`) : ""))}</div>`;
+            const cellH = rowHeights[r] || cellW;
+            const dataRule = "";
+            html += `<div class="cab ${klass}" style="width:${cellW}px;height:${cellH}px;font-size:${Math.max(7, Math.min(10, cellW * .24, cellH * .32))}px;${colorStyle}${dataRule}">${escapeHtml(label || (fallbackStart ? (mode === "power" ? `P${fallbackLinear + 1}` : `D${fallbackLinear + 1}`) : ""))}</div>`;
         }
     }
     html += "</div></div>";
@@ -1182,6 +1288,49 @@ function renderBoard(targetId, mode) {
 function summaryCards(cards) {
     return cards.map(card => `<div class="summary-card">${card.map(([key, value]) => `<div><span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}</div>`).join("");
 }
+function flatSummary(items) {
+    return items.map(([key, value]) => `<div><span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+}
+function syncChoiceRows() {
+    document.querySelectorAll(".choice-row[data-select]").forEach(row => {
+        const select = $(row.dataset.select);
+        if (!select) return;
+        const allowed = new Set([...select.options].filter(option => !option.disabled).map(option => option.value));
+        row.querySelectorAll("button[data-value]").forEach(button => {
+            const available = allowed.has(button.dataset.value);
+            button.hidden = !available || (select.disabled && button.dataset.value !== select.value);
+            button.disabled = !available;
+            button.classList.toggle("active", button.dataset.value === select.value);
+            button.setAttribute("aria-pressed", button.dataset.value === select.value ? "true" : "false");
+        });
+    });
+}
+function renderBoardThumbnail(sourceId, targetId) {
+    const source = $(sourceId);
+    const target = $(targetId);
+    if (!source || !target) return;
+    requestAnimationFrame(() => {
+        const original = source.querySelector(".wiring-map");
+        if (!original) { target.innerHTML = ""; return; }
+        const clone = original.cloneNode(true);
+        const suffix = `-${targetId}`;
+        clone.querySelectorAll("[id]").forEach(node => {
+            const oldId = node.id;
+            node.id = `${oldId}${suffix}`;
+            clone.querySelectorAll(`[marker-end="url(#${oldId})"]`).forEach(path => path.setAttribute("marker-end", `url(#${oldId}${suffix})`));
+        });
+        target.innerHTML = "";
+        target.appendChild(clone);
+        clone.style.transform = "none";
+        const naturalW = Math.max(1, clone.scrollWidth);
+        const naturalH = Math.max(1, clone.scrollHeight);
+        const scale = Math.min((target.clientWidth - 16) / naturalW, (target.clientHeight - 16) / naturalH, .42);
+        clone.style.transform = `scale(${Math.max(.08, scale)})`;
+        clone.style.position = "absolute";
+        clone.style.left = "8px";
+        clone.style.top = "8px";
+    });
+}
 function renderPowerPage() {
     applyPowerCategoryRules();
     const stats = mappingStats();
@@ -1189,14 +1338,31 @@ function renderPowerPage() {
     const cfg = displayConfig();
     const size = physicalSize();
     const totalPower = cfg.fullPerSet * spec.power + cfg.halfPerSet * spec.power * .5;
+    const panelCount = cfg.fullPerSet + cfg.halfPerSet;
     $("powerSummary").innerHTML = summaryCards([
-        [["Input Voltage", `${$("voltageSelect").value} V`], ["Breaker Rating", `${$("currentSelect").value} A`]],
-        [["Unit Power", `${spec.power || "TBD"} W`], ["Estimated Load", `${Math.round(totalPower).toLocaleString()} W`]],
-        [["Main Power", stats["Main Power"] || "-"], ["Power Jumpers", stats["Power Jumpers"] || "-"]],
-        [["Screen Size", `${size.widthM.toFixed(2)} x ${size.heightM.toFixed(2)} m`], ["Cable Length", `${$("powerCableLength").value} m`]]
+        [["Country / region", $("countrySelect").value], ["Input voltage", `${$("voltageSelect").value} V`]],
+        [["Breaker rating", `${$("currentSelect").value} A`], ["Unit power", `${spec.power || "TBD"} W`]],
+        [["Estimated load", `${Math.round(totalPower).toLocaleString()} W`], ["Cable length", `${$("powerCableLength").value} m`]],
+        [["Main power", stats["Main Power"] || "-"], ["Power jumpers", stats["Power Jumpers"] || "-"]],
+        [["Screen size", `${size.widthM.toFixed(2)} x ${size.heightM.toFixed(2)} m`], ["Wiring", $("powerRouteSelect").selectedOptions[0]?.textContent || "-"]]
     ]);
     $("powerDiagramMeta").textContent = `${$("voltageSelect").value} V / ${$("currentSelect").value} A / ${$("powerRouteSelect").selectedOptions[0]?.textContent || ""}`;
+    $("powerProductThumb").src = productThumbnail();
+    $("powerProductModel").textContent = state.model || "-";
+    $("powerScreenSize").textContent = `${size.widthM.toFixed(2)} x ${size.heightM.toFixed(2)} m`;
+    $("powerScreenLoad").textContent = `${(totalPower / 1000).toFixed(1)} kW / ${panelCount} panels`;
+    $("powerSelectedSummary").innerHTML = flatSummary([
+        ["Product", state.model], ["Panel size", `${cabinetSize().w} x ${cabinetSize().h} mm`],
+        ["Country / region", $("countrySelect").value], ["Voltage", `${$("voltageSelect").value} V`], ["Current", `${$("currentSelect").value} A`],
+        ["Wiring", $("powerRouteSelect").selectedOptions[0]?.textContent || "-"], ["Screen", `${cfg.cols} x ${physicalSize().displayRows} panels`]
+    ]);
+    $("powerCalculatedSummary").innerHTML = flatSummary([
+        ["Main power", stats["Main Power"] || "-"], ["Power jumpers", stats["Power Jumpers"] || "-"],
+        ["Estimated load", `${Math.round(totalPower).toLocaleString()} W`], ["Cable length", `${$("powerCableLength").value} m`]
+    ]);
     renderBoard("powerBoard", "power");
+    renderBoardThumbnail("powerBoard", "powerPreviewMini");
+    syncChoiceRows();
 }
 function renderProcessorCanvases() {
     const pages = state.mappingReport?.processorPages;
@@ -1218,7 +1384,7 @@ function renderProcessorCanvases() {
             for (let c = 0; c < canvasCols; c++) {
                 const cell = byPos.get(`${r}|${c}`);
                 const controllerId = cell?.cell?.controllerId || page.displayIndex + 1;
-                const style = cell ? `height:${rowHeights[r]}px;background:${controllerFill(controllerId, .32)};border-color:${controllerStroke(controllerId)};` : `height:${rowHeights[r]}px;`;
+                const style = cell ? `height:${rowHeights[r]}px;background:${SCHEMATIC_TOKENS.cabinetFill};border-color:${SCHEMATIC_TOKENS.cabinetBorder};box-shadow:none;` : `height:${rowHeights[r]}px;`;
                 items.push(`<div class="processor-mini-cell" style="${style}">${escapeHtml(cell?.cell?.portLabel || "")}</div>`);
             }
         }
@@ -1237,17 +1403,34 @@ function renderProcessingPage() {
     const processor = selectedProcessorRow();
     const fiber = selectedFiberBoxRow();
     $("processingSummary").innerHTML = summaryCards([
-        [["Control System", $("systemSelect").value], ["Bandwidth", $("bandwidthSelect").value]],
-        [["Processor", compact(processor?.[F.model]) || "-"], ["Processor Type", processorCanvasKey(processor)]],
-        [["Fiber Box", fiber ? compact(fiber[F.model]) : "Not Required"], ["Fiber Box Qty", fiber ? `${fiberBoxQuantity()} pcs` : "-"]],
-        [["Bit / Frame", $("bitRateSelect").selectedOptions[0]?.textContent || ""], ["Wiring", $("dataRouteSelect").selectedOptions[0]?.textContent || ""]],
-        [["Processors", stats.Processors || `${processorCount} Units`], ["Main Data", stats["Main Data"] || "-"]],
-        [["Short Data", stats["Short Data"] || "-"], ["Data Jumpers", stats["Data Jumpers"] || "-"]]
+        [["Control system", $("systemSelect").value], ["Bandwidth", $("bandwidthSelect").value]],
+        [["Processor", compact(processor?.[F.model]) || "-"], ["Processor type", processorCanvasKey(processor)]],
+        [["Fiber box", fiber ? compact(fiber[F.model]) : "Not required"], ["Fiber box qty", fiber ? `${fiberBoxQuantity()} pcs` : "-"]],
+        [["Bit / frame", $("bitRateSelect").selectedOptions[0]?.textContent || ""], ["Wiring", $("dataRouteSelect").selectedOptions[0]?.textContent || ""]],
+        [["Processors", stats.Processors || `${processorCount} Units`], ["Main data", stats["Main Data"] || "-"]],
+        [["Short data", stats["Short Data"] || "-"], ["Data jumpers", stats["Data Jumpers"] || "-"]]
     ]);
     $("networkDiagramMeta").textContent = `${processorCount} x ${compact(processor?.[F.model]) || "processor"}, ${stats["Main Data"] || "data runs pending"}`;
+    const size = physicalSize();
+    $("networkProductThumb").src = productThumbnail();
+    $("networkProductModel").textContent = state.model || "-";
+    $("networkScreenSize").textContent = `${size.widthM.toFixed(2)} x ${size.heightM.toFixed(2)} m`;
+    $("networkProcessorModel").textContent = `${compact(processor?.[F.model]) || "-"} / ${$("bandwidthSelect").value}`;
+    $("processingSelectedSummary").innerHTML = flatSummary([
+        ["Control system", $("systemSelect").value], ["Bandwidth", $("bandwidthSelect").value],
+        ["Processor", compact(processor?.[F.model]) || "-"], ["Fiber box", fiber ? compact(fiber[F.model]) : "Not required"],
+        ["Bit / frame", $("bitRateSelect").selectedOptions[0]?.textContent || "-"], ["Wiring", $("dataRouteSelect").selectedOptions[0]?.textContent || "-"]
+    ]);
+    $("processingCalculatedSummary").innerHTML = flatSummary([
+        ["Processors", stats.Processors || `${processorCount} Units`], ["Fiber boxes", fiber ? `${fiberBoxQuantity()} pcs` : "-"],
+        ["Main data", stats["Main Data"] || "-"], ["Short data", stats["Short Data"] || "-"],
+        ["Data jumpers", stats["Data Jumpers"] || "-"], ["Panels", `${displayConfig().fullPerSet + displayConfig().halfPerSet}`]
+    ]);
     $("controllerStack").innerHTML = "";
     renderBoard("networkBoard", "data");
     renderProcessorCanvases();
+    renderBoardThumbnail("networkBoard", "networkPreviewMini");
+    syncChoiceRows();
 }
 function renderQuoteSummary() {
     const cfg = displayConfig();
@@ -1257,6 +1440,7 @@ function renderQuoteSummary() {
     const systemText = `${$("systemSelect").value} ${compact(selectedProcessorRow()?.[F.model]) || "Processor"} / ${$("bandwidthSelect").value}`;
     $("quoteSummary").innerHTML = [
         ["Model:", state.model],
+        ["Installation:", $("installationMethodSelect")?.selectedOptions[0]?.textContent || "-"],
         ["Control System:", systemText],
         ["Display Tiles Quantity:", `W ${cfg.cols} pcs x H ${size.displayRows} pcs`],
         ["Display Area:", `${(area * 10.7639).toFixed(2)} ft² (${area.toFixed(2)} m²)`],
@@ -1361,7 +1545,7 @@ function renderQuote() {
     let renderedSectionCount = 0;
     grouped.forEach((group, section) => {
         if (!group.length) return;
-        rows.push(`<tr class="quote-section ${renderedSectionCount === 0 ? "section-first" : ""}"><td colspan="${header.length}">${section}</td></tr>`);
+        rows.push(`<tr class="quote-section ${renderedSectionCount === 0 ? "section-first" : ""}"><td colspan="${header.length}">${sectionDisplayName(section)}</td></tr>`);
         renderedSectionCount += 1;
         group.forEach(item => {
             const qty = state.qtyOverrides.has(item.key) ? state.qtyOverrides.get(item.key) : item.qty;
@@ -1443,6 +1627,7 @@ function syncMapping() {
     if (!frame.contentWindow || !state.model) return;
     const cfg = displayConfig();
     const spec = getScreenSpec();
+    const panel = cabinetSize();
     frame.contentWindow.postMessage({
         type: "SYNC_MAPPING",
         model: state.model,
@@ -1451,6 +1636,8 @@ function syncMapping() {
         bandwidth: $("bandwidthSelect").value,
         pixelW: spec.pixelW || 128,
         pixelH: spec.pixelH || 128,
+        panelW: panel.w || 500,
+        panelH: panel.h || 500,
         power: spec.power || 300,
         hasHalfSupport: cfg.halfSupported,
         productCategory: sourceCategory(),
@@ -1460,6 +1647,7 @@ function syncMapping() {
         bitRate: $("bitRateSelect").value,
         voltageSpec: `${$("voltageSelect").value}|${$("currentSelect").value}`,
         routeDirection: $("dataRouteSelect").value,
+        powerRouteDirection: $("powerRouteSelect").value,
         processorModel: compact(selectedProcessorRow()?.[F.model]),
         fiberBoxModel: compact(selectedFiberBoxRow()?.[F.model]),
         masterCanvas: $("canvasSelect").value
@@ -1469,8 +1657,8 @@ function appendixCards(items) {
     return items.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
 }
 function svgPathBetween(a, b) {
+    if (a.box && b.box) return routedWirePath(a, b, $("dataRouteSelect")?.value || "vertical", 0, .38);
     const midX = (a.x + b.x) / 2;
-    const midY = (a.y + b.y) / 2;
     if (a.c === b.c || a.r === b.r) return `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
     return `M ${a.x} ${a.y} L ${midX} ${a.y} L ${midX} ${b.y} L ${b.x} ${b.y}`;
 }
@@ -1486,8 +1674,8 @@ function appendixMatrixSvg(mode) {
     if (!Array.isArray(matrix) || !matrix.length) return "";
     const rows = matrix.length;
     const cols = matrix[0]?.length || 1;
-    const unitW = matrix[0]?.[0]?.pixelW || getScreenSpec().pixelW || 1;
-    const rowRatios = matrix.map(row => Math.max(.25, Math.max(...row.map(cell => (cell.pixelH || getScreenSpec().pixelH || unitW) / unitW))));
+    const unitW = matrix[0]?.[0]?.displayW || cabinetSize().w || 1;
+    const rowRatios = matrix.map(row => Math.max(.125, Math.max(...row.map(cell => (cell.displayH || cabinetSize().h || unitW) / (cell.displayW || unitW)))));
     const ratioTotal = rowRatios.reduce((sum, value) => sum + value, 0);
 
     // Tight viewBox with minimal margins to maximize grid fill in A4 page
@@ -1498,12 +1686,14 @@ function appendixMatrixSvg(mode) {
     const availH = 680;
 
     // Fit grid: min ensures it fits within container; tight padding maximizes fill
-    const cellWFromW = (availW - pad * 2) / cols;
-    const cellWFromH = ratioTotal > 0 ? (availH - pad * 2 - titleH) / ratioTotal : cellWFromW;
+    const colGap = 6;
+    const rowGap = 10;
+    const cellWFromW = (availW - pad * 2 - colGap * Math.max(0, cols - 1)) / cols;
+    const cellWFromH = ratioTotal > 0 ? (availH - pad * 2 - titleH - rowGap * Math.max(0, rows - 1)) / ratioTotal : cellWFromW;
     const cellW = Math.min(cellWFromW, cellWFromH);
     const rowHeights = rowRatios.map(ratio => ratio * cellW);
-    const gridW = cols * cellW;
-    const gridH = rowHeights.reduce((sum, value) => sum + value, 0);
+    const gridW = cols * cellW + colGap * Math.max(0, cols - 1);
+    const gridH = rowHeights.reduce((sum, value) => sum + value, 0) + rowGap * Math.max(0, rows - 1);
     const labelFontSize = Math.max(8, Math.min(13, cellW * 0.34));
     const viewW = gridW + pad * 2;
     const viewH = titleH + pad + gridH + pad;
@@ -1511,8 +1701,7 @@ function appendixMatrixSvg(mode) {
     const startY = titleH + pad;
 
     const rowY = [startY];
-    rowHeights.forEach(height => rowY.push(rowY[rowY.length - 1] + height));
-    const direction = $("powerRouteSelect")?.value || "vertical";
+    rowHeights.forEach(height => rowY.push(rowY[rowY.length - 1] + height + rowGap));
     const lane = Math.min(10, Math.max(3, cellW * .16));
     const boxes = [];
     const rects = [];
@@ -1521,7 +1710,7 @@ function appendixMatrixSvg(mode) {
         boxes[r] = [];
         for (let c = 0; c < cols; c++) {
             const cell = matrix[r][c];
-            const x = startX + c * cellW;
+            const x = startX + c * (cellW + colGap);
             const y = rowY[r];
             const h = rowHeights[r];
             const isPowerOnly = mode === "power";
@@ -1540,14 +1729,15 @@ function appendixMatrixSvg(mode) {
                 cell,
                 box: { left: x, top: y, right: x + cellW, bottom: y + h, width: cellW, height: h }
             };
-            rects.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${cellW.toFixed(2)}" height="${h.toFixed(2)}" rx="2" fill="${fill}" stroke="${stroke}" stroke-width=".8"/>`);
+            rects.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${cellW.toFixed(2)}" height="${h.toFixed(2)}" fill="${fill}" stroke="${SCHEMATIC_TOKENS.cabinetBorder}" stroke-width=".8"/>`);
             const text = isPowerOnly ? cell.powerLabel : cell.portLabel;
-            labels.push(`<text x="${(x + cellW / 2).toFixed(2)}" y="${(y + h / 2 + labelFontSize * .3).toFixed(2)}" text-anchor="middle" font-size="${labelFontSize.toFixed(1)}" font-weight="800" fill="#ffffff">${escapeHtml(text || "")}</text>`);
+            labels.push(`<text x="${(x + cellW / 2).toFixed(2)}" y="${(y + h / 2 + labelFontSize * .3).toFixed(2)}" text-anchor="middle" font-size="${labelFontSize.toFixed(1)}" font-weight="650" fill="${SCHEMATIC_TOKENS.label}">${escapeHtml(text || "")}</text>`);
         }
     }
     // Render cable paths - for "both" mode, draw power AND data cables
     const allPaths = [];
     const drawCables = (cableMode, laneSign, strokeFn) => {
+        const direction = cableMode === "power" ? ($("powerRouteSelect")?.value || "vertical") : ($("dataRouteSelect")?.value || "vertical");
         const groups = cableGroups(matrix, cableMode);
         Object.values(groups).forEach(points => {
             points.sort((a, b) => a.seq - b.seq);
@@ -1556,28 +1746,32 @@ function appendixMatrixSvg(mode) {
                 const aBox = boxes[points[i - 1].r]?.[points[i - 1].c];
                 const bBox = boxes[points[i].r]?.[points[i].c];
                 if (!aBox || !bBox) continue;
-                const sideLane = laneSign * lane;
-                const horizontalRatio = cableMode === "power" ? .25 : .75;
-                const a = { x: direction === "vertical" ? aBox.cx + sideLane : aBox.cx, y: direction === "vertical" ? aBox.cy : aBox.box.top + aBox.box.height * horizontalRatio, r: aBox.r, c: aBox.c, box: aBox.box };
-                const b = { x: direction === "vertical" ? bBox.cx + sideLane : bBox.cx, y: direction === "vertical" ? bBox.cy : bBox.box.top + bBox.box.height * horizontalRatio, r: bBox.r, c: bBox.c, box: bBox.box };
-                allPaths.push(`<path d="${routedWirePath(a, b, direction, 0, cableMode === "power" ? 0.18 : 0.28)}" fill="none" stroke="${stroke}" stroke-width="${cableMode === "power" ? 2.4 : 2}" stroke-linecap="round" stroke-linejoin="round" opacity=".88"${cableMode === "power" ? ` marker-end="url(#appendix-power-arrow)"` : ""}/>`);
+                const sideLane = cableMode === "power" ? -aBox.w * .24 : aBox.w * .24;
+                const a = { x: direction === "vertical" ? aBox.cx + sideLane : aBox.cx, y: direction === "vertical" ? aBox.cy : aBox.box.top + aBox.box.height * (cableMode === "power" ? .22 : .78), r: aBox.r, c: aBox.c, box: aBox.box };
+                const b = { x: direction === "vertical" ? bBox.cx + (cableMode === "power" ? -bBox.w * .24 : bBox.w * .24) : bBox.cx, y: direction === "vertical" ? bBox.cy : bBox.box.top + bBox.box.height * (cableMode === "power" ? .22 : .78), r: bBox.r, c: bBox.c, box: bBox.box };
+                const jumper = direction === "horizontal" ? points[i - 1].r !== points[i].r : points[i - 1].c !== points[i].c;
+                const routeStroke = stroke;
+                allPaths.push(`<path d="${routedWirePath(a, b, direction, 0, cableMode === "power" ? 0.18 : 0.28)}" fill="none" stroke="${routeStroke}" stroke-width="${jumper ? 1.9 : cableMode === "power" ? 1.8 : 1.55}" stroke-linecap="square" stroke-linejoin="miter" opacity=".96"${jumper ? ` stroke-dasharray="6 4"` : ""} marker-end="url(#appendix-${cableMode}-arrow)"/>`);
             }
         });
     };
 
     if (mode === "both") {
-        drawCables("power", -1, "#b91c1c");
-        drawCables("data", 1, "#1e80ff");
+        drawCables("power", -1, SCHEMATIC_TOKENS.power);
+        drawCables("data", 1, SCHEMATIC_TOKENS.data);
     } else if (mode === "power") {
-        drawCables("power", -1, "#b91c1c");
+        drawCables("power", -1, SCHEMATIC_TOKENS.power);
     } else {
-        drawCables("data", 1, "#1e80ff");
+        drawCables("data", 1, SCHEMATIC_TOKENS.data);
     }
 
     const title = mode === "both" ? "Power & Data Topology" : mode === "power" ? "Power Mapping" : "Data Topology";
     const titleY = pad + 4;
     return `<svg class="appendix-svg" viewBox="0 0 ${viewW} ${viewH}" xmlns="http://www.w3.org/2000/svg">
-        <defs><marker id="appendix-power-arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/></marker></defs>
+        <defs>
+            <marker id="appendix-power-arrow" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="${SCHEMATIC_TOKENS.power}"/></marker>
+            <marker id="appendix-data-arrow" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="${SCHEMATIC_TOKENS.data}"/></marker>
+        </defs>
         <rect x="1" y="1" width="${viewW - 2}" height="${viewH - 2}" rx="12" fill="#fff" stroke="#d8e0eb"/>
         <text x="${pad}" y="${titleY}" font-size="15" font-weight="800" fill="#111827">${title}</text>
         <text x="${viewW - pad}" y="${titleY}" text-anchor="end" font-size="9" fill="#64748b">${escapeHtml(state.model)} / ${cols} x ${physicalSize().displayRows}</text>
@@ -1622,9 +1816,9 @@ function appendixProcessorSvg(page) {
             const h = rowHeights[r];
             const cid = item?.cell?.controllerId || page.displayIndex + 1;
             boxes[r][c] = { x, y, w: cellW, h, cx: x + cellW / 2, cy: y + h / 2, r, c, item };
-            rects.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${cellW.toFixed(2)}" height="${h.toFixed(2)}" rx="2" fill="${item ? controllerFill(cid, .28) : "#f8fafc"}" stroke="${item ? controllerStroke(cid) : "#d8e0eb"}" stroke-width=".7"/>`);
+            rects.push(`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${cellW.toFixed(2)}" height="${h.toFixed(2)}" fill="${item ? SCHEMATIC_TOKENS.cabinetFill : SCHEMATIC_TOKENS.cabinetAltFill}" stroke="${SCHEMATIC_TOKENS.cabinetBorder}" stroke-width=".7"/>`);
             if (item?.cell?.portLabel) {
-                labels.push(`<text x="${(x + cellW / 2).toFixed(2)}" y="${(y + h / 2 + labelFontSize * .3).toFixed(2)}" text-anchor="middle" font-size="${labelFontSize.toFixed(1)}" font-weight="800" fill="#ffffff">${escapeHtml(item.cell.portLabel)}</text>`);
+                labels.push(`<text x="${(x + cellW / 2).toFixed(2)}" y="${(y + h / 2 + labelFontSize * .3).toFixed(2)}" text-anchor="middle" font-size="${labelFontSize.toFixed(1)}" font-weight="650" fill="${SCHEMATIC_TOKENS.label}">${escapeHtml(item.cell.portLabel)}</text>`);
             }
         }
     }
@@ -1642,11 +1836,15 @@ function appendixProcessorSvg(page) {
             const aBox = boxes[points[i - 1].r]?.[points[i - 1].c];
             const bBox = boxes[points[i].r]?.[points[i].c];
             if (!aBox || !bBox) continue;
-            paths.push(`<path d="${svgPathBetween({ x: aBox.cx, y: aBox.cy, r: aBox.r, c: aBox.c }, { x: bBox.cx, y: bBox.cy, r: bBox.r, c: bBox.c })}" fill="none" stroke="#0057b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`);
+            const jumper = points[i - 1].c !== points[i].c;
+            const aGeometry = { left: aBox.x, right: aBox.x + aBox.w, top: aBox.y, bottom: aBox.y + aBox.h, width: aBox.w, height: aBox.h };
+            const bGeometry = { left: bBox.x, right: bBox.x + bBox.w, top: bBox.y, bottom: bBox.y + bBox.h, width: bBox.w, height: bBox.h };
+            paths.push(`<path d="${svgPathBetween({ x: aBox.cx, y: aBox.cy, r: aBox.r, c: aBox.c, box: aGeometry }, { x: bBox.cx, y: bBox.cy, r: bBox.r, c: bBox.c, box: bGeometry })}" fill="none" stroke="${SCHEMATIC_TOKENS.data}" stroke-width="${jumper ? 1.9 : 1.55}" stroke-linecap="square" stroke-linejoin="miter"${jumper ? ` stroke-dasharray="6 4"` : ""} marker-end="url(#processor-data-arrow)" opacity=".96"/>`);
         }
     });
     const procTitleY = pad + 4;
     return `<svg class="appendix-svg" viewBox="0 0 ${viewW} ${viewH}" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="processor-data-arrow" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="${SCHEMATIC_TOKENS.data}"/></marker></defs>
         <rect x="1" y="1" width="${viewW - 2}" height="${viewH - 2}" rx="12" fill="#fff" stroke="#d8e0eb"/>
         <text x="${pad}" y="${procTitleY}" font-size="14" font-weight="800" fill="#111827">${escapeHtml(compact(selectedProcessorRow()?.[F.model]) || $("systemSelect").value)} ${escapeHtml(page.title || "Processor")} / ${escapeHtml(canvas.key || $("canvasSelect").value)}</text>
         <text x="${viewW - pad}" y="${procTitleY}" text-anchor="end" font-size="8" fill="#64748b">${escapeHtml(canvas.width || "-")} x ${escapeHtml(canvas.height || "-")} px | Ports: ${escapeHtml(page.portCount || 0)}</text>
@@ -1703,7 +1901,7 @@ function quoteExportRows() {
     items.forEach(item => grouped.get(item.section)?.push(item));
     grouped.forEach((group, section) => {
         if (!group.length) return;
-        rows.push({ section });
+        rows.push({ section, sectionLabel: sectionDisplayName(section) });
         group.forEach(item => {
             const qty = state.qtyOverrides.has(item.key) ? state.qtyOverrides.get(item.key) : item.qty;
             const price = discountedPrice(item);
@@ -1726,7 +1924,7 @@ function exportQuoteExcel() {
     headers.push("Quantity", "Unit");
     if (state.showPrice) headers.push("Unit Price", "Extended Price");
     const body = quoteExportRows().map(row => {
-        if (row.section) return `<tr><td colspan="${headers.length}"><strong>${escapeHtml(row.section)}</strong></td></tr>`;
+        if (row.section) return `<tr><td colspan="${headers.length}"><strong>${escapeHtml(row.sectionLabel || sectionDisplayName(row.section))}</strong></td></tr>`;
         const cells = [row.product, row.description];
         if (state.showSap) cells.push(row.sap);
         cells.push(row.qty, row.unit);
@@ -1827,11 +2025,18 @@ function drawQuotePdfPageStart(pdf, image, continued, columns, pageWidth) {
         pdf.setFillColor(244, 246, 248);
         pdf.rect(left + 49, summaryY, right - left - 49, 6.2, "F");
         pdf.setFont("helvetica", index < 2 ? "bold" : "normal");
-        pdf.setFontSize(7);
+        pdf.setFontSize(6.4);
         pdf.setTextColor(31, 41, 55);
         pdf.text(label, left + 2, summaryY + 4.1);
         pdf.setFont("helvetica", "bold");
-        pdf.text(String(value), left + 51, summaryY + 4.1);
+        const valueText = String(value);
+        const availableWidth = right - left - 53;
+        let valueFontSize = 6.4;
+        while (valueFontSize > 4.5 && pdf.getTextWidth(valueText) > availableWidth) {
+            valueFontSize -= 0.25;
+            pdf.setFontSize(valueFontSize);
+        }
+        pdf.text(valueText, left + 51, summaryY + 4.1, { maxWidth: availableWidth });
         summaryY += 6.2;
     });
     return drawQuotePdfTableHeader(pdf, columns, left, summaryY + 4);
@@ -1868,7 +2073,7 @@ async function buildQuotePdf() {
         if (row.section) {
             currentSection = row.section;
             ensureSpace(7);
-            drawSectionLabel(currentSection);
+            drawSectionLabel(row.sectionLabel || sectionDisplayName(currentSection));
             continue;
         }
         const values = {
@@ -1884,7 +2089,7 @@ async function buildQuotePdf() {
         const rowHeight = Math.max(9, 3.6 + titleLines.length * 3.2 + descriptionLines.length * 2.8);
         if (y + rowHeight > contentBottom) {
             addQuotePage();
-            drawSectionLabel(currentSection, true);
+            drawSectionLabel(sectionDisplayName(currentSection), true);
         }
         let cursor = left;
         columns.forEach(column => {
@@ -2018,10 +2223,18 @@ function bindEvents() {
     });
     ["widthM", "heightM"].forEach(id => $(id).addEventListener("input", () => { syncGridFromArea(id); renderAll(); }));
     ["colsInput", "rowsInput"].forEach(id => $(id).addEventListener("input", () => { matchGridToAspect(id); syncAreaFromGrid(); renderAll(); }));
-    ["voltageSelect", "currentSelect", "powerRouteSelect", "powerCableLength", "bitRateSelect", "canvasSelect"].forEach(id => {
+    ["countrySelect", "voltageSelect", "currentSelect", "powerRouteSelect", "powerCableLength", "bitRateSelect", "canvasSelect"].forEach(id => {
         $(id).addEventListener("input", () => renderAll());
         $(id).addEventListener("change", () => renderAll());
     });
+    document.querySelectorAll(".choice-row[data-select]").forEach(row => row.addEventListener("click", event => {
+        const button = event.target.closest("button[data-value]");
+        if (!button || button.disabled) return;
+        const select = $(row.dataset.select);
+        if (!select || select.value === button.dataset.value) return;
+        select.value = button.dataset.value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+    }));
     $("systemSelect").addEventListener("change", () => { populateBandwidth(true); applyDefaultProcessingCanvas(true); renderAll(); });
     $("bandwidthSelect").addEventListener("change", () => { applyDefaultProcessingCanvas(true); renderAll(); });
     $("processorSelect").addEventListener("change", () => {
@@ -2030,12 +2243,10 @@ function bindEvents() {
         renderAll();
     });
     $("fiberBoxSelect").addEventListener("change", () => renderAll());
-    $("dataRouteSelect").addEventListener("change", () => {
-        if (!$("dataRouteSelect").disabled) $("powerRouteSelect").value = $("dataRouteSelect").value;
+    $("dataRouteSelect").addEventListener("change", () => renderAll());
+    $("installationMethodSelect").addEventListener("change", event => {
+        state.installationMethod = event.target.value;
         renderAll();
-    });
-    $("powerRouteSelect").addEventListener("change", () => {
-        if (!$("dataRouteSelect").disabled) $("dataRouteSelect").value = $("powerRouteSelect").value;
     });
     $("backPageBtn").addEventListener("click", () => {
         const index = pages.findIndex(page => page.id === state.page);
@@ -2078,6 +2289,7 @@ Promise.all([
         const initialModels = modelsForCategory(true);
         state.model = initialModels.includes("CRS1.2") ? "CRS1.2" : initialModels[0] || "";
         ensureModelSelection();
+        applyInstallationOptions(true);
         populateSystems();
         populateBandwidth(true);
         applyDefaultProcessingCanvas(true);
