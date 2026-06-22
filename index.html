@@ -541,9 +541,11 @@ textarea { min-height: 74px; resize: vertical; }
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    opacity: .8;
-    mix-blend-mode: screen;
+    object-fit: contain;
+    object-position: center;
+    padding: 8%;
+    opacity: .16;
+    mix-blend-mode: multiply;
 }
 .screen-grid {
     position: absolute;
@@ -555,8 +557,8 @@ textarea { min-height: 74px; resize: vertical; }
 .screen-cell {
     min-width: 0;
     min-height: 0;
-    border: 1px solid rgba(220,232,255,.26);
-    background: rgba(47,105,255,.04);
+    border: 1px solid rgba(17,24,39,.62);
+    background: rgba(255,255,255,.015);
 }
 .screen-cell.half {
     background: rgba(255,255,255,.07);
@@ -670,7 +672,7 @@ textarea { min-height: 74px; resize: vertical; }
     position: absolute;
     inset: 16px;
     pointer-events: none;
-    z-index: 1;
+    z-index: 3;
     overflow: visible;
 }
 .cabinet-grid {
@@ -1300,8 +1302,8 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
 .comparison-stage { height:410px; }
 .floor { background:#cfd5dd; }
 .screen-compare { border-color:#cfd5dd; background-color:#f2f4f7; box-shadow:0 12px 28px rgba(16,24,40,.12); }
-.screen-compare img { mix-blend-mode:multiply; opacity:.82; }
-.screen-cell { border-color:rgba(255,255,255,.38); background:transparent; }
+.screen-compare img { mix-blend-mode:multiply; opacity:.14; }
+.screen-cell { border-color:rgba(17,24,39,.72); background:transparent; }
 .dim-label { color:#344054; text-shadow:none; }
 .dim-diagonal { color:#d91028; }
 .final-product-card { margin-top:12px; padding:0; gap:0; border-color:#e1e5ea; border-radius:12px; background:#fff; overflow:hidden; }
@@ -1321,16 +1323,30 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
 .summary-card span { color:#667085; font-size:10px; }
 .summary-card strong { color:#17202b; font-size:13px; text-align:right; }
 .brand-kicker,.product-search-panel>label,.cabinet-option label,.final-product-card span,.summary-card span,.paper-head h2,.letterhead-footer .footer-brand,.wiring-appendix .letterhead-footer .footer-brand,.wiring-appendix header strong,.appendix-summary span { text-transform:none; letter-spacing:0; }
-.diagram-tools { margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid #eceff2; }
+.diagram-tools { margin-bottom:0; padding-bottom:0; border-bottom:0; }
 .diagram-title h2 { color:#101828; font-size:20px; }
-.wiring-board { min-height:540px; border-color:#e1e5ea; border-radius:10px; background:linear-gradient(90deg,rgba(71,84,103,.045) 1px,transparent 1px),linear-gradient(0deg,rgba(71,84,103,.045) 1px,transparent 1px),#fbfcfd; background-size:24px 24px; }
-.cab { color:#17202b; border-color:#cfd5dd; background:#fff; }
+.diagram-legend { display:flex; align-items:center; flex-wrap:wrap; gap:10px 16px; margin:6px 0 12px; color:#667085; font-size:11px; font-weight:650; }
+.diagram-legend span { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.diagram-legend i { display:block; width:24px; height:0; border-top:2px solid; }
+.diagram-legend .power i { border-color:#e31b23; }
+.diagram-legend .data i { border-color:#1d4ed8; }
+.diagram-legend .power-jumper i { border-color:#e31b23; border-top-style:dashed; }
+.diagram-legend .data-jumper i { border-color:#1d4ed8; border-top-style:dashed; }
+.wiring-board { min-height:0; border-color:#e1e5ea; border-radius:10px; background:linear-gradient(90deg,rgba(71,84,103,.035) 1px,transparent 1px),linear-gradient(0deg,rgba(71,84,103,.035) 1px,transparent 1px),#fff; background-size:24px 24px; }
+.wiring-map { margin:0 auto; padding:16px; }
+.cab { color:#111827; border:1px solid #cbd5e1; border-radius:0; background:#fff; box-shadow:none; font-weight:650; }
 .cab.power-start { border-color:#e3192b; box-shadow:inset 0 0 0 1px rgba(227,25,43,.12); }
-.cab.data-start { border-color:#2783e8; box-shadow:inset 0 0 0 1px rgba(39,131,232,.12); }
+.cab.data-start { border-color:#1d4ed8; box-shadow:none; }
 .run-label { padding:0; border-radius:0; background:transparent!important; }
 .run-label.power { color:#d91028; }
 .run-label.data { color:#1e6fb9; }
 .legend { color:#667085; }
+.legend span::before { width:22px; height:0; border-radius:0; background:transparent!important; }
+.legend .power-dot::before { border-top:2px solid #e31b23; }
+.legend .data-dot::before { border-top:2px solid #1d4ed8; }
+.legend .jumper-dot::before { border-top:3px solid #111827; }
+.legend .power-jumper-dot::before { border-top:2px dashed #e31b23; }
+.legend .data-jumper-dot::before { border-top:2px dashed #1d4ed8; }
 .controller-box { color:#17202b; border-color:#e1e5ea; border-radius:9px; background:#fff; }
 .processor-canvas-card { border-color:#e1e5ea; border-radius:10px; background:#fff; }
 .processor-canvas-card h3 { color:#101828; }
@@ -1342,7 +1358,7 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
 .page-actions { margin:18px -24px -34px; padding:14px 24px; background:rgba(255,255,255,.96); border-top:1px solid #e1e5ea; box-shadow:0 -6px 20px rgba(16,24,40,.04); }
 .page-actions button { min-height:46px; }
 .page-actions .btn-primary { min-width:168px; }
-@media (max-width:1180px) {
+@media (max-width:900px) {
     .topbar { grid-template-columns:1fr; padding-top:12px; padding-bottom:12px; }
     .steps { justify-self:stretch; max-width:none; }
     .diagram-page { grid-template-columns:1fr; }
@@ -1437,6 +1453,70 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
     }
     .print-header, .print-footer { display: none !important; }
     body.quote-multipage .quote-section:not(.section-first) { break-before: page; page-break-before: always; }
+}
+
+/* Concept 3: print-first workspace */
+.concept-page {
+    grid-template-columns:minmax(0,1fr) 340px;
+    align-items:start;
+    gap:18px;
+}
+.concept-main { min-width:0; display:grid; gap:18px; }
+.concept-overview-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.overview-tile {
+    min-height:82px; display:flex; flex-direction:column; justify-content:center; gap:7px;
+    padding:14px 16px; border:1px solid #e1e5ea; border-radius:10px; background:#fff;
+}
+.overview-tile span { color:#667085; font-size:11px; font-weight:650; }
+.overview-tile strong { color:#101828; font-size:15px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.product-overview { flex-direction:row; justify-content:flex-start; align-items:center; }
+.product-overview img { width:56px; height:52px; object-fit:cover; border:1px solid #e1e5ea; border-radius:6px; background:#f8fafc; }
+.product-overview div { min-width:0; display:grid; gap:6px; }
+.concept-sidebar { min-width:0; display:grid; gap:18px; }
+.concept-config-card,.sidebar-summary-panel,.preview-panel { padding:20px; }
+.concept-config-card h2 { margin:0 0 18px; color:#101828; font-size:18px; }
+.choice-field { display:grid; gap:9px; padding:0 0 16px; }
+.choice-field + .choice-field { padding-top:16px; border-top:1px solid #eceff2; }
+.choice-field label { color:#344054; font-size:12px; font-weight:700; }
+.choice-source { position:absolute!important; width:1px!important; height:1px!important; overflow:hidden!important; clip:rect(0 0 0 0)!important; white-space:nowrap!important; }
+.choice-row { display:flex; flex-wrap:wrap; gap:8px; }
+.choice-row button {
+    min-height:36px; padding:8px 13px; border:1px solid #d0d5dd; border-radius:7px;
+    background:#fff; color:#344054; font-size:12px; font-weight:700; cursor:pointer;
+}
+.choice-row button:hover { border-color:#e31b23; color:#c81024; }
+.choice-row button.active { border-color:#e31b23; color:#c81024; background:#fff7f8; box-shadow:0 0 0 1px rgba(227,27,35,.08); }
+.choice-row button:disabled { display:none; }
+.compact-choice-row button { flex:1 1 calc(50% - 4px); padding-inline:9px; }
+.concept-config-card .form-grid { grid-template-columns:1fr; gap:14px; }
+.concept-config-card .field select:not(.choice-source) { min-height:42px; border-color:#d0d5dd; background:#fff; color:#101828; }
+.concept-config-card .full-field { grid-column:1/-1; }
+.sidebar-summary-panel>div:first-child,.preview-panel header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.sidebar-summary-panel h3,.preview-panel h3 { margin:0; color:#101828; font-size:15px; }
+.sidebar-summary-panel>div:first-child span,.preview-panel header span { color:#667085; font-size:10px; }
+.concept-diagram-card { min-height:0; padding:22px; }
+.concept-diagram-card .wiring-board { min-height:0; }
+.diagram-bottom-summaries { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px; }
+.diagram-bottom-summaries>section { min-width:0; padding:18px; border:1px solid #d0d5dd; background:#fff; }
+.diagram-bottom-summaries h3 { margin:0 0 14px; color:#101828; font-size:14px; }
+.large-summary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 18px; }
+.large-summary-grid div { min-width:0; }
+.large-summary-grid span { display:block; color:#667085; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.large-summary-grid strong { display:block; margin-top:4px; color:#101828; font-size:13px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mini-preview { height:210px; overflow:hidden; border:1px solid #e1e5ea; background:#f8fafc; position:relative; }
+.mini-preview .wiring-map { margin:0; transform-origin:top left; pointer-events:none; }
+.mini-preview .run-label,.mini-preview .legend { display:none; }
+@media (max-width:900px) {
+    .concept-page { grid-template-columns:1fr; }
+    .concept-sidebar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .concept-config-card { grid-row:span 2; }
+}
+@media (max-width:760px) {
+    .concept-overview-row,.diagram-bottom-summaries,.concept-sidebar { grid-template-columns:1fr; }
+    .overview-tile { min-height:70px; }
+    .concept-diagram-card { padding:14px; }
+    .concept-diagram-card .wiring-board { min-height:380px; }
+    .large-summary-grid { grid-template-columns:1fr 1fr; }
 }
 </style>
 </head>
@@ -1555,7 +1635,7 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
                 <div class="floor"></div>
                 <img class="human" src="images/person-reference.png?v=2" alt="Human scale">
                 <div class="screen-compare" id="screenCompare">
-                    <img id="screenTexture" src="images/category-fix-install.jpg" alt="Display preview">
+                    <img id="screenTexture" src="images/roe-display-background.png" alt="ROE display background">
                     <div class="screen-grid" id="screenGrid"></div>
                 </div>
                 <div class="dim-label dim-width" id="dimWidth">-</div>
@@ -1566,59 +1646,62 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
         <section class="final-product-card" id="productInfoPanel"></section>
     </section>
 
-    <section class="page diagram-page" id="page-power">
-        <div class="panel config-card">
-            <h2 class="section-title">Power settings</h2>
-            <div class="form-grid">
-                <div class="field">
-                    <label>Voltage</label>
-                    <select id="voltageSelect">
-                        <option value="220">220 V</option>
-                        <option value="110">110 V</option>
-                    </select>
+    <section class="page concept-page" id="page-power">
+        <main class="concept-main">
+            <section class="concept-overview-row" aria-label="Power project overview">
+                <article class="overview-tile product-overview"><img id="powerProductThumb" src="images/category-fix-install.jpg" alt="Selected product"><div><span>Product</span><strong id="powerProductModel">-</strong></div></article>
+                <article class="overview-tile"><span>Screen size</span><strong id="powerScreenSize">-</strong></article>
+                <article class="overview-tile"><span>Screen power</span><strong id="powerScreenLoad">-</strong></article>
+            </section>
+            <section class="panel concept-diagram-card">
+                <div class="diagram-tools">
+                    <div class="diagram-title"><h2>Power wiring diagram</h2><p>Cabinet-to-cabinet power sequence and jumpers.</p></div>
+                    <span class="muted" id="powerDiagramMeta">-</span>
                 </div>
-                <div class="field">
-                    <label>Current</label>
-                    <select id="currentSelect">
-                        <option value="10">10 A</option>
-                        <option value="16">16 A</option>
-                    </select>
+                <div class="diagram-legend" aria-label="Power wiring legend"><span class="power"><i></i>Power cable</span><span class="power-jumper"><i></i>Power jumper</span><span id="powerDiagramLegendMeta">-</span></div>
+                <div class="wiring-board" id="powerBoard"></div>
+                <div class="diagram-bottom-summaries">
+                    <section><h3>Display configuration</h3><div class="large-summary-grid" id="powerSelectedSummary"></div></section>
+                    <section><h3>Calculated quantities</h3><div class="large-summary-grid" id="powerCalculatedSummary"></div></section>
                 </div>
-                <div class="field">
-                    <label>Wiring direction</label>
-                    <select id="powerRouteSelect">
-                        <option value="vertical">Top to Bottom</option>
-                        <option value="horizontal">Left to Right</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Power cable length</label>
-                    <select id="powerCableLength">
-                        <option value="10">10 m recommended</option>
-                        <option value="5">5 m</option>
-                        <option value="15">15 m</option>
-                    </select>
-                </div>
-            </div>
-            <div class="settings-group-title">Calculated power summary</div>
-            <p class="summary-note">Read-only results calculated from the settings above.</p>
-            <div class="control-summary" id="powerSummary"></div>
-        </div>
-        <div class="panel diagram-card">
-            <div class="diagram-tools">
-                <div class="diagram-title">
-                    <h2>Power wiring diagram</h2>
-                    <p>Live preview based on voltage, current, route, and cabinet count.</p>
-                </div>
-                <span class="muted" id="powerDiagramMeta">-</span>
-            </div>
-            <div class="wiring-board" id="powerBoard"></div>
-        </div>
+            </section>
+        </main>
+        <aside class="concept-sidebar">
+            <section class="panel concept-config-card">
+                <h2>Power configuration</h2>
+                <div class="choice-field"><label>Country / Region</label><select class="choice-source" id="countrySelect"><option value="EU" selected>EU</option><option value="US">US</option><option value="JP">Japan</option><option value="UK">UK</option><option value="CN">China</option><option value="Global">Global</option></select><div class="choice-row" data-select="countrySelect"><button data-value="EU">EU</button><button data-value="US">US</button><button data-value="JP">JP</button><button data-value="UK">UK</button><button data-value="CN">CN</button></div></div>
+                <div class="choice-field"><label>Voltage</label><select class="choice-source" id="voltageSelect"><option value="100">100 V</option><option value="200">200 V</option><option value="230" selected>230 V</option></select><div class="choice-row" data-select="voltageSelect"><button data-value="100">100 V</button><button data-value="200">200 V</button><button data-value="230">230 V</button></div></div>
+                <div class="choice-field"><label>Current</label><select class="choice-source" id="currentSelect"><option value="10">10 A</option><option value="16">16 A</option></select><div class="choice-row" data-select="currentSelect"><button data-value="10">10 A</button><button data-value="16">16 A</button></div></div>
+                <div class="choice-field"><label>Wiring direction</label><select class="choice-source" id="powerRouteSelect"><option value="vertical">Top to Bottom</option><option value="horizontal">Left to Right</option></select><div class="choice-row" data-select="powerRouteSelect"><button data-value="vertical">Vertical</button><button data-value="horizontal">Horizontal</button></div></div>
+                <div class="choice-field"><label>Power cable length</label><select class="choice-source" id="powerCableLength"><option value="5">5 m</option><option value="10" selected>10 m</option><option value="15">15 m</option></select><div class="choice-row" data-select="powerCableLength"><button data-value="5">5 m</button><button data-value="10">10 m</button><button data-value="15">15 m</button></div></div>
+            </section>
+            <section class="panel sidebar-summary-panel"><div><h3>Calculated summary</h3><span>Read-only</span></div><div class="control-summary" id="powerSummary"></div></section>
+            <section class="panel preview-panel"><header><h3>Print preview</h3><span>A4</span></header><div class="mini-preview" id="powerPreviewMini"></div></section>
+        </aside>
     </section>
 
-    <section class="page diagram-page" id="page-processing">
-        <div class="panel config-card">
-            <h2 class="section-title">Processing settings</h2>
+    <section class="page concept-page" id="page-processing">
+        <main class="concept-main">
+            <section class="concept-overview-row" aria-label="Network project overview">
+                <article class="overview-tile product-overview"><img id="networkProductThumb" src="images/category-fix-install.jpg" alt="Selected product"><div><span>Product</span><strong id="networkProductModel">-</strong></div></article>
+                <article class="overview-tile"><span>Screen size</span><strong id="networkScreenSize">-</strong></article>
+                <article class="overview-tile"><span>Processor</span><strong id="networkProcessorModel">-</strong></article>
+            </section>
+            <section class="panel concept-diagram-card">
+                <div class="diagram-tools"><div class="diagram-title"><h2>Network wiring diagram</h2><p>Processor outputs, short data cables, and data jumpers.</p></div><span class="muted" id="networkDiagramMeta">-</span></div>
+                <div class="diagram-legend" aria-label="Data wiring legend"><span class="data"><i></i>Data cable</span><span class="data-jumper"><i></i>Data jumper</span><span id="dataDiagramLegendMeta">-</span></div>
+                <div class="controller-stack" id="controllerStack"></div>
+                <div class="wiring-board" id="networkBoard"></div>
+                <div class="processor-canvases" id="processorCanvases"></div>
+                <div class="diagram-bottom-summaries">
+                    <section><h3>Processor configuration</h3><div class="large-summary-grid" id="processingSelectedSummary"></div></section>
+                    <section><h3>Calculated quantities</h3><div class="large-summary-grid" id="processingCalculatedSummary"></div></section>
+                </div>
+            </section>
+        </main>
+        <aside class="concept-sidebar">
+        <section class="panel concept-config-card">
+            <h2>Processing configuration</h2>
             <div class="form-grid">
                 <div class="field">
                     <label>Control system</label>
@@ -1637,40 +1720,30 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
                     <label>Fiber box</label>
                     <select id="fiberBoxSelect"></select>
                 </div>
-                <div class="field">
+                <div class="field full-field">
                     <label>Bit/Frame</label>
-                    <select id="bitRateSelect">
+                    <select class="choice-source" id="bitRateSelect">
                         <option value="10b60Hz">10bit 60Hz</option>
                         <option value="8b60Hz">8bit 60Hz</option>
                         <option value="12b60Hz">12bit 60Hz</option>
                         <option value="10b50Hz">10bit 50Hz</option>
                         <option value="10b120Hz">10bit 120Hz</option>
                     </select>
+                    <div class="choice-row compact-choice-row" data-select="bitRateSelect"><button data-value="10b60Hz">10 bit 60 Hz</button><button data-value="8b60Hz">8 bit 60 Hz</button><button data-value="12b60Hz">12 bit 60 Hz</button><button data-value="10b50Hz">10 bit 50 Hz</button><button data-value="10b120Hz">10 bit 120 Hz</button></div>
                 </div>
-                <div class="field">
+                <div class="field full-field">
                     <label>Wiring method</label>
-                    <select id="dataRouteSelect">
+                    <select class="choice-source" id="dataRouteSelect">
                         <option value="vertical">Top to Bottom</option>
                         <option value="horizontal">Left to Right</option>
                     </select>
+                    <div class="choice-row" data-select="dataRouteSelect"><button data-value="vertical">Vertical</button><button data-value="horizontal">Horizontal</button></div>
                 </div>
             </div>
-            <div class="settings-group-title">Calculated processing summary</div>
-            <p class="summary-note">Read-only results calculated from the settings above.</p>
-            <div class="control-summary" id="processingSummary"></div>
-        </div>
-        <div class="panel diagram-card">
-            <div class="diagram-tools">
-                <div class="diagram-title">
-                    <h2>Network wiring diagram</h2>
-                    <p>Live data runs from processor outputs to the display.</p>
-                </div>
-                <span class="muted" id="networkDiagramMeta">-</span>
-            </div>
-            <div class="controller-stack" id="controllerStack"></div>
-            <div class="wiring-board" id="networkBoard"></div>
-            <div class="processor-canvases" id="processorCanvases"></div>
-        </div>
+        </section>
+        <section class="panel sidebar-summary-panel"><div><h3>Calculated summary</h3><span>Read-only</span></div><div class="control-summary" id="processingSummary"></div></section>
+        <section class="panel preview-panel"><header><h3>Print preview</h3><span>A4</span></header><div class="mini-preview" id="networkPreviewMini"></div></section>
+        </aside>
     </section>
 
     <section class="page quote-layout" id="page-summary">

@@ -71,22 +71,33 @@
         .report-page-name { font-size:0.72rem; font-weight:700; letter-spacing:0.2px; text-align:right; line-height:1.28; white-space:pre-line; }
         .report-page-footer { position:absolute; left:20px; right:20px; bottom:8px; height:22px; display:flex; align-items:flex-end; justify-content:space-between; border-top:2px solid #b00016; padding-top:4px; color:#64748b; font-size:0.58rem; }
         .a4-page-title { color:#111827; font-size:0.92rem; font-weight:800; margin-bottom:10px; border-left:3px solid #22d3ee; padding-left:10px; letter-spacing:0.2px; }
+        .schematic-legend { display:flex; align-items:center; gap:16px; margin:0 0 4px; color:#64748b; font-size:9px; }
+        .schematic-legend span { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+        .schematic-legend i { display:block; width:22px; height:0; border-top:2px solid; }
+        .schematic-legend .power i { border-color:#e31b23; }
+        .schematic-legend .data i { border-color:#1d4ed8; }
+        .schematic-legend .power-jumper i { border-color:#e31b23; border-top-style:dashed; }
+        .schematic-legend .data-jumper i { border-color:#1d4ed8; border-top-style:dashed; }
         .a4-page-subtitle { display:block; margin-top:4px; font-size:0.68rem; color:#9aa6b5; font-weight:600; letter-spacing:0; }
-        .summary-strip { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:-2px 0 8px; }
+        .summary-strip { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:10px 0 0; order:4; }
+        .summary-panel-box { border:1px solid #cbd5e1; background:#fff; padding:10px 12px; min-width:0; }
+        .summary-panel-box h3 { margin:0 0 8px; color:#111827; font-size:0.7rem; }
+        .summary-panel-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px 12px; }
+        #a4page1 .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:10px 0 0; padding:0; background:transparent; border:0; box-shadow:none; order:4; }
         .summary-pill { border:1px solid #d8e0eb; background:#f8fafc; border-radius:10px; padding:6px 8px; min-width:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
         .summary-col + .summary-col { border-left:1px solid #d8e0eb; padding-left:8px; }
         .summary-entry + .summary-entry { margin-top:3px; }
         .summary-label { color:#64748b; font-size:0.58rem; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .summary-value { color:#111827; font-size:0.78rem; font-weight:800; line-height:1.25; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .a4-cabling { flex:1; overflow:hidden; text-align:center; }
+        .a4-cabling { flex:0 0 auto; overflow:hidden; text-align:center; order:3; }
         .right-panel { overflow-x:auto; }
-        .matrix-visual { display:inline-grid; gap:14px; background:#111520; padding:24px; border-radius:18px; position:relative; }
+        .matrix-visual { display:inline-grid; gap:8px; background:#fff; padding:16px; border-radius:0; position:relative; }
         .cab-module {
-            width:96px; background:#1a1f2c; border-radius:0;
+            width:96px; background:#fff; border-radius:0;
             display:flex; flex-direction:column; align-items:center; justify-content:center;
-            border:1.5px solid rgba(255,255,255,0.18);
+            border:1px solid #cbd5e1;
             font-family: monospace; padding:8px 4px; position:relative; z-index:2;
-            box-shadow:0 2px 5px rgba(0,0,0,0.3);
+            box-shadow:none;
         }
         .power-text { 
             color:#111827; font-size:10px; font-weight:800; letter-spacing:0.2px;
@@ -143,8 +154,8 @@
         .canvas-card,
         .stats-grid,
         .cabling-canvas { background:#ffffff; border-color:#d8e0eb; color:#1f2937; box-shadow:0 12px 28px rgba(15,23,42,0.08); }
-        .matrix-visual { background:#ffffff; border:1px solid #d8e0eb; }
-        .cab-module { border-color:rgba(31,41,55,0.18); box-shadow:0 2px 8px rgba(15,23,42,0.12); }
+        .matrix-visual { background:#ffffff; border:1px solid #e1e5ea; }
+        .cab-module { border-color:#cbd5e1; box-shadow:none; }
         .stat-card { background:#f8fafc; }
         .legend-bar,
         .info-muted { background:#f8fafc; color:#64748b; }
@@ -248,10 +259,9 @@
         <div class="selector-group">
             <label>&#128268; &#20379;&#30005;&#35268;&#26684;&#65288;&#30005;&#21387; / &#30005;&#27969;&#65289;</label>
             <select id="voltageSelect">
-                <option value="220|16" selected>220V 16A&#65288;&#21333;&#36335; 3520W&#65289;</option>
-                <option value="220|10">220V 10A&#65288;&#21333;&#36335; 2200W&#65289;</option>
-                <option value="110|16">110V 16A&#65288;&#21333;&#36335; 1760W&#65289;</option>
-                <option value="110|10">110V 10A&#65288;&#21333;&#36335; 1100W&#65289;</option>
+                <option value="230|16" selected>230V 16A</option><option value="230|10">230V 10A</option>
+                <option value="200|16">200V 16A</option><option value="200|10">200V 10A</option>
+                <option value="100|16">100V 16A</option><option value="100|10">100V 10A</option>
             </select>
         </div>
         
@@ -288,6 +298,7 @@
         <!-- A4 Page 1: Stats + Topology -->
         <div class="a4-page" id="a4page1">
             <div class="a4-page-title">Power &amp; Data Topology</div>
+            <div class="schematic-legend"><span class="power"><i></i>Power cable</span><span class="power-jumper"><i></i>Power jumper</span><span class="data"><i></i>Data cable</span><span class="data-jumper"><i></i>Data jumper</span></div>
             <div class="stats-grid" id="statsGrid"></div>
             <div class="a4-cabling"><div id="cabVisual"></div></div>
         </div>
@@ -295,6 +306,7 @@
         <!-- A4 Page 2: Power Mapping -->
         <div class="a4-page" id="a4page2">
             <div class="a4-page-title">Power Mapping</div>
+            <div class="schematic-legend"><span class="power"><i></i>Power cable</span><span class="power-jumper"><i></i>Power jumper</span></div>
             <div class="summary-strip" id="powerMappingInfoStrip"></div>
             <div class="a4-cabling"><div id="powerVisual"></div></div>
         </div>
@@ -315,7 +327,17 @@ const processorData = [
     { "主控": "Colorlight", "网口": "1G", "8b24Hz": "1,625,000", "8b30Hz": "1,300,000", "8b48Hz": "812,500", "8b50Hz": "780,000", "8b60Hz": "650,000", "8b120Hz": "320,000", "10b24Hz": "1,218,750", "10b30Hz": "975,000", "10b48Hz": "609,375", "10b50Hz": "585,000", "10b60Hz": "487,500", "10b120Hz": "240,000", "12b24Hz": "975,000", "12b30Hz": "780,000", "12b48Hz": "487,500", "12b50Hz": "468,000", "12b60Hz": "390,000", "12b120Hz": "192,000" }
 ];
 
-let currentProductObj = { model: " ?  ", pixelW: 160, pixelH: 320, power: 600 };
+let currentProductObj = { model: " ?  ", pixelW: 160, pixelH: 320, panelW: 500, panelH: 1000, power: 600 };
+const SCHEMATIC_TOKENS = Object.freeze({
+    cabinetFill: '#ffffff',
+    cabinetAltFill: '#f8fafc',
+    cabinetDataFill: '#f7faff',
+    cabinetBorder: '#cbd5e1',
+    power: '#e31b23',
+    data: '#1d4ed8',
+    jumper: '#111827',
+    label: '#111827'
+});
 let _fullCount = 0;
 let _currentSystem = "Brompton";
 let _currentBandwidth = "1G";
@@ -375,37 +397,16 @@ function isSingleControllerMode() {
 
 function portFillColor(index, portIndex, rowIndex = 0, colIndex = 0, direction = null, context = 'processor') {
     const safePort = Number.isFinite(portIndex) ? portIndex : 0;
-    if (isSingleControllerMode()) {
-        if (context === 'topology') return 'transparent';
-        return safePort % 2 === 0 ? 'hsla(205, 86%, 54%, 0.18)' : 'hsla(205, 72%, 42%, 0.30)';
-    }
-    const tone = getControllerTone(index);
-    const variant = safePort % 4;
-    const cycleLift = Math.floor(safePort / 4) % 2;
-    const tones = [
-        { l: 50, s: 62, h: -3 },
-        { l: 66, s: 58, h: 2 },
-        { l: 55, s: 60, h: -2 },
-        { l: 70, s: 54, h: 3 },
-    ];
-    const c = tones[variant] || tones[0];
-    const lightness = Math.max(28, Math.min(82, c.l + cycleLift * 2));
-    const saturation = Math.max(24, Math.min(82, Math.round(tone.s * 0.58 + c.s * 0.42)));
-    if (tone.s === 0) return `hsl(210, ${Math.max(22, c.s - 10)}%, ${lightness}%)`;
-    return `hsl(${(tone.h + c.h + 360) % 360}, ${saturation}%, ${lightness}%)`;
+    return safePort % 2 === 0 ? SCHEMATIC_TOKENS.cabinetFill : SCHEMATIC_TOKENS.cabinetDataFill;
 }
 
 function powerMappingTone(labelOrId) {
     const match = (labelOrId || '').toString().match(/P(\d+)/);
     const index = match ? Math.max(0, parseInt(match[1], 10) - 1) : 0;
-    const filled = index % 2 === 0;
-    const cycle = Math.floor(index / 2) % 3;
-    const lineLightness = [47, 42, 52][cycle];
-    const borderLightness = [68, 62, 72][cycle];
     return {
-        fill: filled ? 'hsla(4, 78%, 55%, 0.26)' : 'hsla(4, 78%, 55%, 0.07)',
-        border: `hsl(4, 74%, ${borderLightness}%)`,
-        line: `hsl(4, 82%, ${lineLightness}%)`
+        fill: index % 2 === 0 ? SCHEMATIC_TOKENS.cabinetFill : SCHEMATIC_TOKENS.cabinetAltFill,
+        border: SCHEMATIC_TOKENS.cabinetBorder,
+        line: SCHEMATIC_TOKENS.power
     };
 }
 
@@ -720,9 +721,15 @@ function renderInfoStripHtml(cards) {
     `).join('');
 }
 
+function renderLargeInfoBoxes(cards, leftTitle, rightTitle) {
+    const midpoint = Math.ceil(cards.length / 2);
+    const box = (title, group) => `<section class="summary-panel-box"><h3>${title}</h3><div class="summary-panel-grid">${group.map(card => `${renderSummaryColumnHtml(card.left || [])}${renderSummaryColumnHtml(card.right || [])}`).join('')}</div></section>`;
+    return box(leftTitle, cards.slice(0, midpoint)) + box(rightTitle, cards.slice(midpoint));
+}
+
 function renderPowerInfoStrip() {
     const strip = document.getElementById('powerMappingInfoStrip');
-    if (strip) strip.innerHTML = renderInfoStripHtml(getPowerInfoItems());
+    if (strip) strip.innerHTML = renderLargeInfoBoxes(getPowerInfoItems(), 'Display configuration', 'Calculated quantities');
 }
 
 function pdfDrawReportHeader(pdf, PW) {
@@ -858,6 +865,34 @@ function pdfDrawInfoStrip(pdf, cards, x, y, w, columns = 4) {
 
 function normalizeProductCategory(category) {
     return (category || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function pdfDrawInlineLegend(pdf, x, y, mode = 'topology') {
+    const items = mode === 'topology' ? [
+        { label: 'Power cable', color: SCHEMATIC_TOKENS.power, dashed: false, width: 0.34 },
+        { label: 'Power jumper', color: SCHEMATIC_TOKENS.power, dashed: true, width: 0.34 },
+        { label: 'Data cable', color: SCHEMATIC_TOKENS.data, dashed: false, width: 0.3 },
+        { label: 'Data jumper', color: SCHEMATIC_TOKENS.data, dashed: true, width: 0.3 }
+    ] : mode === 'data' ? [
+        { label: 'Data cable', color: SCHEMATIC_TOKENS.data, dashed: false, width: 0.3 },
+        { label: 'Data jumper', color: SCHEMATIC_TOKENS.data, dashed: true, width: 0.3 }
+    ] : [
+        { label: 'Power cable', color: SCHEMATIC_TOKENS.power, dashed: false, width: 0.34 },
+        { label: 'Power jumper', color: SCHEMATIC_TOKENS.power, dashed: true, width: 0.34 }
+    ];
+    let cursor = x;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(4.8);
+    items.forEach(item => {
+        pdfSetColor(pdf, 'setDrawColor', item.color, [17, 24, 39]);
+        pdf.setLineWidth(item.width);
+        if (typeof pdf.setLineDashPattern === 'function') pdf.setLineDashPattern(item.dashed ? [1.7, 1.2] : [], 0);
+        pdf.line(cursor, y, cursor + 7, y);
+        if (typeof pdf.setLineDashPattern === 'function') pdf.setLineDashPattern([], 0);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(item.label, cursor + 9, y + 1.2);
+        cursor += 9 + pdf.getTextWidth(item.label) + 6;
+    });
 }
 
 function selectedRouteDirection(mode = 'data') {
@@ -1415,14 +1450,16 @@ function computeSystem() {
     let matrix = [];
     let w = currentProductObj.pixelW;
     let h = currentProductObj.pixelH;
+    const displayW = currentProductObj.panelW || w;
+    const displayH = currentProductObj.panelH || h;
     for (let r = 0; r < useRows; r++) {
         let rowArr = [];
-        for (let c = 0; c < useCols; c++) rowArr.push({ type: "Full", pixelW: w, pixelH: h });
+        for (let c = 0; c < useCols; c++) rowArr.push({ type: "Full", pixelW: w, pixelH: h, displayW, displayH });
         matrix.push(rowArr);
     }
     if (hasHalfRow) {
         let halfArr = [];
-        for (let c = 0; c < useCols; c++) halfArr.push({ type: "Half", pixelW: w, pixelH: Math.floor(h/2) });
+        for (let c = 0; c < useCols; c++) halfArr.push({ type: "Half", pixelW: w, pixelH: Math.floor(h/2), displayW, displayH: displayH / 2 });
         matrix.push(halfArr);
     }
     
@@ -1504,12 +1541,18 @@ function computeSystem() {
     let totalResH = useRows * h + (hasHalfRow ? h/2 : 0);
    
     document.getElementById('statsGrid').innerHTML = `
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Total resolution</div><div class="stat-value">${totalResW}x${Math.floor(totalResH)}</div></div><div class="stat-item"><div class="stat-label">Screen size</div><div class="stat-value">${useCols} x ${useRows + (hasHalfRow ? 0.5 : 0)}</div></div></div>
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Master canvas</div><div class="stat-value">${portPlan.canvas.key} <span style="font-size:0.7em;color:#9aa6b5">${portPlan.canvas.width}x${portPlan.canvas.height}</span></div></div><div class="stat-item"><div class="stat-label">Processors</div><div class="stat-value" style="color:#fde68a;">${portPlan.controllerSummaries.length}</div></div></div>
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Main power</div><div class="stat-value" style="color:#ff7e6e;">${totalPowerCables}</div></div><div class="stat-item"><div class="stat-label">Main data</div><div class="stat-value" style="color:#6bc8ff;">${totalPortCables}</div></div></div>
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Short power</div><div class="stat-value" style="color:#ffb4a8;">${powerSegments.shortCount}</div></div><div class="stat-item"><div class="stat-label">Short data</div><div class="stat-value" style="color:#9ddcff;">${portSegments.shortCount}</div></div></div>
-        <div class="stat-card stat-pair"><div class="stat-item"><div class="stat-label">Power jumpers</div><div class="stat-value" style="color:#ff7e6e;">${powerSegments.jumperCount}</div></div><div class="stat-item"><div class="stat-label">Data jumpers</div><div class="stat-value" style="color:#46b7ff;">${portSegments.jumperCount}</div></div></div>
-    `;
+        <section class="summary-panel-box"><h3>Display and processor configuration</h3><div class="summary-panel-grid">
+            <div><div class="stat-label">Total resolution</div><div class="stat-value">${totalResW}x${Math.floor(totalResH)}</div></div>
+            <div><div class="stat-label">Screen size</div><div class="stat-value">${useCols} x ${useRows + (hasHalfRow ? 0.5 : 0)}</div></div>
+            <div><div class="stat-label">Master canvas</div><div class="stat-value">${portPlan.canvas.key} ${portPlan.canvas.width}x${portPlan.canvas.height}</div></div>
+            <div><div class="stat-label">Processors</div><div class="stat-value">${portPlan.controllerSummaries.length}</div></div>
+        </div></section>
+        <section class="summary-panel-box"><h3>Calculated quantities</h3><div class="summary-panel-grid">
+            <div><div class="stat-label">Main power</div><div class="stat-value">${totalPowerCables}</div></div>
+            <div><div class="stat-label">Main data</div><div class="stat-value">${totalPortCables}</div></div>
+            <div><div class="stat-label">Short power / jumpers</div><div class="stat-value">${powerSegments.shortCount} / ${powerSegments.jumperCount}</div></div>
+            <div><div class="stat-label">Short data / jumpers</div><div class="stat-value">${portSegments.shortCount} / ${portSegments.jumperCount}</div></div>
+        </div></section>`;
 
     document.getElementById('maxPixelsSpan').innerText = maxPixels.toLocaleString();
     document.getElementById('maxPowerSpan').innerText = maxPower;
@@ -1555,7 +1598,9 @@ function getMappingReportData() {
                 portLabel: item.cell.portLabel,
                 controllerId: item.cell.controllerId,
                 pixelW: item.cell.pixelW,
-                pixelH: item.cell.pixelH
+                pixelH: item.cell.pixelH,
+                displayW: item.cell.displayW,
+                displayH: item.cell.displayH
             }
         }))
     }));
@@ -1673,7 +1718,11 @@ function drawCablingLines() {
         container.style.position = 'relative';
         container.appendChild(svg);
     }
-    svg.innerHTML = '';
+    svg.style.overflow = 'visible';
+    svg.innerHTML = `<defs>
+        <marker id="topologyPowerArrow" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="${SCHEMATIC_TOKENS.power}"/></marker>
+        <marker id="topologyDataArrow" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="${SCHEMATIC_TOKENS.data}"/></marker>
+    </defs>`;
     const svgRect = svg.getBoundingClientRect();
     svg.setAttribute('viewBox', `0 0 ${Math.max(1, svgRect.width)} ${Math.max(1, svgRect.height)}`);
     svg.setAttribute('preserveAspectRatio', 'none');
@@ -1700,8 +1749,6 @@ function drawCablingLines() {
                 width: elementRect.width,
                 height: elementRect.height
             };
-            const laneX = elementRect.width * 0.12;
-            
             // 竖向：电源左/网线右，同高；横向：电源上/网线下，同X
             const powerIsVert = powerDirection === 'vertical';
             const dataIsVert = dataDirection === 'vertical';
@@ -1709,18 +1756,19 @@ function drawCablingLines() {
             if (pMatch) {
                 let id = pMatch[1], seq = parseInt(pMatch[2]);
                 if (!powerGroups[id]) powerGroups[id] = [];
-                powerGroups[id].push({ seq, x: powerIsVert ? cx - laneX : cx, y: powerIsVert ? cy : top + elementRect.height * 0.25, r: r, c: c, box });
+                powerGroups[id].push({ seq, x: powerIsVert ? cx - elementRect.width * .24 : cx, y: powerIsVert ? cy : top + elementRect.height * .22, r: r, c: c, box });
             }
             let dMatch = cell.portLabel.match(/D(\d+)-(\d+)/);
             if (dMatch) {
                 let id = `M${cell.controllerId || 1}-D${dMatch[1]}`, seq = parseInt(dMatch[2]);
                 if (!portGroups[id]) portGroups[id] = [];
-                portGroups[id].push({ seq, x: dataIsVert ? cx + laneX : cx, y: dataIsVert ? cy : top + elementRect.height * 0.75, r: r, c: c, box });
+                portGroups[id].push({ seq, x: dataIsVert ? cx + elementRect.width * .24 : cx, y: dataIsVert ? cy : top + elementRect.height * .78, r: r, c: c, box });
             }
         }
     }
     
     const getTopologyPath = (p1, p2, laneOffset = 0, direction = 'vertical') => {
+        const edgeDepth = 0.12;
         const verticalMainInset = 0.28;
         const horizontalMainInset = 0.18;
         const sideInset = 0.18;
@@ -1730,14 +1778,14 @@ function drawCablingLines() {
         if (isVert) {
             if (p1.c === p2.c && p1.r !== p2.r) {
                 const goingDown = p2.r > p1.r;
-                const startY = goingDown ? p1.y + p1.box.height * verticalMainInset : p1.y - p1.box.height * verticalMainInset;
-                const endY = goingDown ? p2.y - p2.box.height * verticalMainInset : p2.y + p2.box.height * verticalMainInset;
+                const startY = goingDown ? p1.box.bottom - p1.box.height * edgeDepth : p1.box.top + p1.box.height * edgeDepth;
+                const endY = goingDown ? p2.box.top + p2.box.height * edgeDepth : p2.box.bottom - p2.box.height * edgeDepth;
                 return `M ${p1.x} ${startY} L ${p2.x} ${endY}`;
             }
             if (p1.c !== p2.c) {
                 const goingRight = p2.c > p1.c;
-                const startX = goingRight ? p1.box.right - p1.box.width * sideInset : p1.box.left + p1.box.width * sideInset;
-                const endX = goingRight ? p2.box.left + p2.box.width * sideInset : p2.box.right - p2.box.width * sideInset;
+                const startX = goingRight ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
+                const endX = goingRight ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
                 const seamX = goingRight ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
                 const startY = p1.y + laneOffset;
                 const endY = p2.y + laneOffset;
@@ -1749,14 +1797,14 @@ function drawCablingLines() {
         } else {
             if (p1.r === p2.r && p1.c !== p2.c) {
                 const goingRight = p2.c > p1.c;
-                const startX = goingRight ? p1.x + p1.box.width * horizontalMainInset : p1.x - p1.box.width * horizontalMainInset;
-                const endX = goingRight ? p2.x - p2.box.width * horizontalMainInset : p2.x + p2.box.width * horizontalMainInset;
+                const startX = goingRight ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
+                const endX = goingRight ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
                 return `M ${startX} ${p1.y} L ${endX} ${p2.y}`;
             }
             if (p1.r !== p2.r) {
                 const goingDown = p2.r > p1.r;
-                const startY = goingDown ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
-                const endY = goingDown ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
+                const startY = goingDown ? p1.box.bottom - p1.box.height * edgeDepth : p1.box.top + p1.box.height * edgeDepth;
+                const endY = goingDown ? p2.box.top + p2.box.height * edgeDepth : p2.box.bottom - p2.box.height * edgeDepth;
                 const seamY = (goingDown ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
                 const startX = p1.x + laneOffset;
                 const endX = p2.x + laneOffset;
@@ -1769,24 +1817,28 @@ function drawCablingLines() {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
     };
 
-    const drawGroup = (groups, color, laneOffset, direction) => {
+    const drawGroup = (groups, color, laneOffset, direction, mode) => {
         for (let id in groups) {
             let pts = groups[id].sort((a,b) => a.seq - b.seq);
             if (pts.length <= 1) continue;
             for (let i = 1; i < pts.length; i++) {
                 let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", getTopologyPath(pts[i - 1], pts[i], laneOffset, direction));
+                const previous = pts[i - 1], current = pts[i];
+                const jumper = direction === 'horizontal' ? previous.r !== current.r : previous.c !== current.c;
                 path.setAttribute("stroke", color);
-                path.setAttribute("stroke-width", document.body.classList.contains('embedded-report') ? "1.15" : "2.2");
+                path.setAttribute("stroke-width", document.body.classList.contains('embedded-report') ? (jumper ? "1.25" : "1") : (jumper ? "2.15" : mode === 'power' ? "1.75" : "1.55"));
                 path.setAttribute("fill", "none");
-                path.setAttribute("stroke-linecap", "round"); path.setAttribute("stroke-linejoin", "round");
+                path.setAttribute("stroke-linecap", "square"); path.setAttribute("stroke-linejoin", "miter");
+                if (jumper) path.setAttribute("stroke-dasharray", document.body.classList.contains('embedded-report') ? "3 2.4" : "6 4");
+                path.setAttribute("marker-end", `url(#${mode === 'power' ? 'topologyPowerArrow' : 'topologyDataArrow'})`);
                 path.setAttribute("opacity", "0.98");
                 svg.appendChild(path);
             }
         }
     };
-    drawGroup(powerGroups, "#e8382c", 0, powerDirection);
-    drawGroup(portGroups, "#007ee8", 0, dataDirection);
+    drawGroup(powerGroups, SCHEMATIC_TOKENS.power, 0, powerDirection, 'power');
+    drawGroup(portGroups, SCHEMATIC_TOKENS.data, 0, dataDirection, 'data');
 }
 
 // ======================= Processor Canvas  ?? ?=======================
@@ -2257,18 +2309,15 @@ function matrixVisualCellWidth(cols) {
 }
 
 function matrixVisualCellHeight(cellWidth, ratio) {
-    if (document.body.classList.contains('embedded-report')) {
-        return Math.max(12, Math.min(140, Math.round(cellWidth * ratio)));
-    }
-    return Math.min(140, Math.max(60, cellWidth * ratio));
+    return Math.max(4, Math.round(cellWidth * Math.max(0.125, ratio)));
 }
 
 function renderDynamicVisual(matrix) {
     if (!matrix.length) return;
     const rows = matrix.length;
     const cols = matrix[0].length;
-    const w = currentProductObj.pixelW;
-    const h = currentProductObj.pixelH;
+    const w = currentProductObj.panelW || currentProductObj.pixelW || 1;
+    const h = currentProductObj.panelH || currentProductObj.pixelH || w;
     const ratio = h / w;
     const baseW = matrixVisualCellWidth(cols);
     const fullHeight = matrixVisualCellHeight(baseW, ratio);
@@ -2295,7 +2344,7 @@ function renderDynamicVisual(matrix) {
             const portFill = portFillColor(controllerToneIndex, portIdx, r, c, document.getElementById('routeDirectionSelect')?.value, 'topology');
             const powerFont = adaptiveMatrixLabelPx(matrix, mod.powerLabel, baseW, height, 8);
             const portFont = adaptiveMatrixLabelPx(matrix, mod.portLabel, baseW, height, 8);
-            html += `<div class="cab-module" data-row="${r}" data-col="${c}" style="width:${baseW}px;height:${height}px; background:${portFill};">
+            html += `<div class="cab-module" data-row="${r}" data-col="${c}" style="width:${baseW}px;height:${height}px;background:${portFill};border-color:${SCHEMATIC_TOKENS.cabinetBorder};box-shadow:none;">
                         <div class="power-text" style="font-size:${powerFont.toFixed(2)}px">${mod.powerLabel}</div>
                         <div style="height:${Math.max(1, height * 0.08).toFixed(1)}px;"></div>
                         <div class="port-text" style="font-size:${portFont.toFixed(2)}px">${mod.portLabel}</div>
@@ -2312,8 +2361,8 @@ function renderPowerMapping(matrix) {
 
     const rows = matrix.length;
     const cols = matrix[0].length;
-    const unitWidth = currentProductObj.pixelW || 1;
-    const ratio = (currentProductObj.pixelH || unitWidth) / unitWidth;
+    const unitWidth = currentProductObj.panelW || currentProductObj.pixelW || 1;
+    const ratio = (currentProductObj.panelH || currentProductObj.pixelH || unitWidth) / unitWidth;
     const baseW = matrixVisualCellWidth(cols);
     const fullHeight = matrixVisualCellHeight(baseW, ratio);
     const halfHeight = fullHeight / 2;
@@ -2325,7 +2374,7 @@ function renderPowerMapping(matrix) {
             const height = cell.type === "Half" ? halfHeight : fullHeight;
             const tone = powerMappingTone(cell.powerLabel);
             const fontSize = adaptiveMatrixLabelPx(matrix, cell.powerLabel, baseW, height, 9);
-            html += `<div class="cab-module" data-power-row="${r}" data-power-col="${c}" style="width:${baseW}px;height:${height}px;background:${tone.fill};border:1.5px solid ${tone.border};box-shadow:none;">
+            html += `<div class="cab-module" data-power-row="${r}" data-power-col="${c}" style="width:${baseW}px;height:${height}px;background:${tone.fill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};box-shadow:none;">
                         <div class="power-text" style="font-size:${fontSize.toFixed(2)}px">${cell.powerLabel}</div>
                     </div>`;
         }
@@ -2348,11 +2397,12 @@ function drawPowerMappingLines() {
         svg.style.width = '100%';
         svg.style.height = '100%';
         svg.style.pointerEvents = 'none';
-        svg.style.zIndex = '1';
+        svg.style.zIndex = '3';
         container.style.position = 'relative';
         container.appendChild(svg);
     }
     svg.innerHTML = '';
+    svg.style.overflow = 'visible';
     const svgRect = svg.getBoundingClientRect();
     svg.setAttribute('viewBox', `0 0 ${Math.max(1, svgRect.width)} ${Math.max(1, svgRect.height)}`);
     svg.setAttribute('preserveAspectRatio', 'none');
@@ -2373,8 +2423,8 @@ function drawPowerMappingLines() {
             if (!groups[id]) groups[id] = [];
             groups[id].push({
                 seq: parseInt(match[2], 10),
-                x: left + elementRect.width / 2,
-                y: direction === 'horizontal' ? top + elementRect.height * 0.25 : top + elementRect.height / 2,
+                x: direction === 'vertical' ? left + elementRect.width * .26 : left + elementRect.width / 2,
+                y: direction === 'horizontal' ? top + elementRect.height * .22 : top + elementRect.height / 2,
                 r,
                 c,
                 box: {
@@ -2400,9 +2450,10 @@ function drawPowerMappingLines() {
             marker.setAttribute("viewBox", "0 0 10 10");
             marker.setAttribute("refX", "8.5");
             marker.setAttribute("refY", "5");
-            marker.setAttribute("markerWidth", "3.2");
-            marker.setAttribute("markerHeight", "3.2");
-            marker.setAttribute("orient", "auto-start-reverse");
+            marker.setAttribute("markerWidth", "4");
+            marker.setAttribute("markerHeight", "4");
+            marker.setAttribute("markerUnits", "strokeWidth");
+            marker.setAttribute("orient", "auto");
             const arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
             arrow.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
             arrow.setAttribute("fill", color);
@@ -2413,23 +2464,23 @@ function drawPowerMappingLines() {
     };
 
     const powerArrowPath = (previous, current) => {
-        const insideRatio = 0.18;
+        const insideRatio = 0.12;
         if (previous.r !== current.r && previous.c === current.c) {
             const goingDown = current.r > previous.r;
-            const startY = goingDown ? previous.y + previous.box.height * insideRatio : previous.y - previous.box.height * insideRatio;
-            const endY = goingDown ? current.y - current.box.height * insideRatio : current.y + current.box.height * insideRatio;
+            const startY = goingDown ? previous.box.bottom - previous.box.height * insideRatio : previous.box.top + previous.box.height * insideRatio;
+            const endY = goingDown ? current.box.top + current.box.height * insideRatio : current.box.bottom - current.box.height * insideRatio;
             return `M ${previous.x} ${startY} L ${current.x} ${endY}`;
         }
         if (previous.c !== current.c && previous.r === current.r) {
             const goingRight = current.c > previous.c;
-            const startX = goingRight ? previous.x + previous.box.width * insideRatio : previous.x - previous.box.width * insideRatio;
-            const endX = goingRight ? current.x - current.box.width * insideRatio : current.x + current.box.width * insideRatio;
+            const startX = goingRight ? previous.box.right - previous.box.width * insideRatio : previous.box.left + previous.box.width * insideRatio;
+            const endX = goingRight ? current.box.left + current.box.width * insideRatio : current.box.right - current.box.width * insideRatio;
             return `M ${startX} ${previous.y} L ${endX} ${current.y}`;
         }
-        const startX = current.c > previous.c ? previous.x + previous.box.width * insideRatio : current.c < previous.c ? previous.x - previous.box.width * insideRatio : previous.x;
-        const startY = current.r > previous.r ? previous.y + previous.box.height * insideRatio : current.r < previous.r ? previous.y - previous.box.height * insideRatio : previous.y;
-        const endX = current.c > previous.c ? current.x - current.box.width * insideRatio : current.c < previous.c ? current.x + current.box.width * insideRatio : current.x;
-        const endY = current.r > previous.r ? current.y - current.box.height * insideRatio : current.r < previous.r ? current.y + current.box.height * insideRatio : current.y;
+        const startX = current.c > previous.c ? previous.box.right - previous.box.width * insideRatio : current.c < previous.c ? previous.box.left + previous.box.width * insideRatio : previous.x;
+        const startY = current.r > previous.r ? previous.box.bottom - previous.box.height * insideRatio : current.r < previous.r ? previous.box.top + previous.box.height * insideRatio : previous.y;
+        const endX = current.c > previous.c ? current.box.left + current.box.width * insideRatio : current.c < previous.c ? current.box.right - current.box.width * insideRatio : current.x;
+        const endY = current.r > previous.r ? current.box.top + current.box.height * insideRatio : current.r < previous.r ? current.box.bottom - current.box.height * insideRatio : current.y;
         const midX = (startX + endX) / 2;
         const midY = (startY + endY) / 2;
         return direction === 'vertical'
@@ -2444,13 +2495,15 @@ function drawPowerMappingLines() {
         for (let i = 1; i < points.length; i++) {
             const previous = points[i - 1];
             const current = points[i];
+            const jumper = direction === 'horizontal' ? previous.r !== current.r : previous.c !== current.c;
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", powerArrowPath(previous, current));
             path.setAttribute("stroke", tone.line);
-            path.setAttribute("stroke-width", document.body.classList.contains('embedded-report') ? "1.15" : "2");
+            path.setAttribute("stroke-width", document.body.classList.contains('embedded-report') ? (jumper ? "1.25" : "1") : (jumper ? "2.15" : "1.75"));
             path.setAttribute("fill", "none");
-            path.setAttribute("stroke-linecap", "round");
-            path.setAttribute("stroke-linejoin", "round");
+            path.setAttribute("stroke-linecap", "square");
+            path.setAttribute("stroke-linejoin", "miter");
+            if (jumper) path.setAttribute("stroke-dasharray", document.body.classList.contains('embedded-report') ? "3 2.4" : "6 4");
             path.setAttribute("marker-end", `url(#${markerId})`);
             path.setAttribute("opacity", "0.9");
             svg.appendChild(path);
@@ -2516,9 +2569,9 @@ function renderProcessorCanvasesCanvasLegacyUnused() {
                     const idx = portIndex.get(portNum) ?? 0;
                     const fill = portFillColor(toneIndex, idx, localRow, localCol, document.getElementById('routeDirectionSelect')?.value, 'processor');
                     const fontSize = Math.max(6, Math.min(11, Math.min(cellW, rowHeights[r]) * 0.34));
-                    stageGrid += `<div style="width:${cellW}px;height:${rowHeights[r]}px;background:${fill};border:1px solid rgba(255,255,255,0.35);border-radius:2px;display:flex;align-items:center;justify-content:center;color:#111827;font-size:${fontSize}px;font-family:'JetBrains Mono',monospace;font-weight:700;line-height:1.1;text-shadow:0 1px 0 rgba(255,255,255,.35);" title="屏体 [${r},${c}]">${r + 1},${c + 1}</div>`;
+                    stageGrid += `<div style="width:${cellW}px;height:${rowHeights[r]}px;background:${SCHEMATIC_TOKENS.cabinetFill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};border-radius:0;box-shadow:none;display:flex;align-items:center;justify-content:center;color:${SCHEMATIC_TOKENS.label};font-size:${fontSize}px;font-family:Inter,'Segoe UI',sans-serif;font-weight:650;line-height:1.1;" title="屏体 [${r},${c}]">${r + 1},${c + 1}</div>`;
                 } else {
-                    stageGrid += `<div style="width:${cellW}px;height:${rowHeights[r]}px;background:#f8fafc;border:1px solid #d8e0eb;border-radius:2px;"></div>`;
+                    stageGrid += `<div style="width:${cellW}px;height:${rowHeights[r]}px;background:${SCHEMATIC_TOKENS.cabinetAltFill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};border-radius:0;"></div>`;
                 }
             }
         }
@@ -2545,10 +2598,10 @@ function renderProcessorCanvasesCanvasLegacyUnused() {
 
         let paths = '';
         const laneOffset = 0;
-        // 网线纯色实线，不用箭头
+        // 连续网线路径：进入箱体 12%，并在目标箱体内显示方向箭头
         const processorArrowPath = (p1, p2) => {
-            const mainInset = 0.28;
-            const sideInset = 0.18;
+            const mainInset = 0.38;
+            const sideInset = 0.12;
             if (p1.localCol === p2.localCol && p1.localRow !== p2.localRow) {
                 const goingDown = p2.localRow > p1.localRow;
                 const startY = goingDown ? p1.y + p1.box.height * mainInset : p1.y - p1.box.height * mainInset;
@@ -2571,8 +2624,11 @@ function renderProcessorCanvasesCanvasLegacyUnused() {
             const points = groups[portNum].sort((first, second) => first.sequence - second.sequence);
             if (points.length <= 1) return;
             for (let pointIndex = 1; pointIndex < points.length; pointIndex++) {
-                const d = processorArrowPath(points[pointIndex - 1], points[pointIndex]);
-                paths += `<path d="${d}" stroke="#1e9bff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.88"></path>`;
+                const previous = points[pointIndex - 1], current = points[pointIndex];
+                const d = processorArrowPath(previous, current);
+                const direction = selectedRouteDirection('data');
+                const jumper = direction === 'horizontal' ? previous.localRow !== current.localRow : previous.localCol !== current.localCol;
+                paths += `<path d="${d}" stroke="${SCHEMATIC_TOKENS.data}" stroke-width="${jumper ? 1.9 : 1.55}" fill="none" stroke-linecap="square" stroke-linejoin="miter"${jumper ? ` stroke-dasharray="6 4"` : ""} marker-end="url(#${stageId}-data-arrow)" opacity="0.96"></path>`;
             }
         });
 
@@ -2581,7 +2637,7 @@ function renderProcessorCanvasesCanvasLegacyUnused() {
                 <span class="canvas-card-title">${controllerLabel}</span>
                 <span class="canvas-card-meta">${pieceLabel} · ${piece.cols}×${piece.rows}</span>
             </div>
-            ${stageGrid}<svg id="${stageId}-svg" style="position:absolute;inset:0;width:${stageW}px;height:${stageH}px;pointer-events:none;">${paths}</svg></div>
+            ${stageGrid}<svg id="${stageId}-svg" style="position:absolute;inset:0;width:${stageW}px;height:${stageH}px;pointer-events:none;z-index:3;"><defs><marker id="${stageId}-data-arrow" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="${SCHEMATIC_TOKENS.data}"/></marker></defs>${paths}</svg></div>
             <div class="canvas-card-legend">
                 <span><span class="swatch" style="background:${borderColor};"></span>主控 ${displayIndex + 1}</span>
                 <span><span class="swatch" style="background:#f8fafc;border:1px solid #d8e0eb;"></span> ?  用槽 ?/span>
@@ -2728,9 +2784,9 @@ function renderProcessorCanvases() {
                     const portOrder = portIndex.get(portNum) ?? 0;
                     const fill = portFillColor(toneIndex, portOrder, localRow, localCol, document.getElementById('routeDirectionSelect')?.value, 'processor');
                     const fontSize = Math.max(6, Math.min(10, cellWidth * 0.27, rowHeight * 0.34));
-                    stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:${fill};border:1px solid rgba(255,255,255,0.35);border-radius:2px;display:flex;align-items:center;justify-content:center;color:#111827;font-size:${fontSize}px;font-family:'JetBrains Mono',monospace;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-shadow:0 1px 0 rgba(255,255,255,.35);" title="${cell.portLabel}">${cell.portLabel}</div>`;
+                    stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:${SCHEMATIC_TOKENS.cabinetFill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};border-radius:0;box-shadow:none;display:flex;align-items:center;justify-content:center;color:${SCHEMATIC_TOKENS.label};font-size:${fontSize}px;font-family:Inter,'Segoe UI',sans-serif;font-weight:650;line-height:1;white-space:nowrap;overflow:hidden;" title="${cell.portLabel}">${cell.portLabel}</div>`;
                 } else {
-                    stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:#f8fafc;border:1px solid #d8e0eb;border-radius:2px;"></div>`;
+                    stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:${SCHEMATIC_TOKENS.cabinetAltFill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};border-radius:0;"></div>`;
                 }
             }
         }
@@ -2756,10 +2812,10 @@ function renderProcessorCanvases() {
 
         let paths = '';
         const laneOffset = 0;
-        // 网线纯色实线，不用箭头
+        // 连续网线路径：进入箱体 12%，并在目标箱体内显示方向箭头
         const processorArrowPath = (p1, p2) => {
-            const mainInset = 0.28;
-            const sideInset = 0.18;
+            const mainInset = 0.38;
+            const sideInset = 0.12;
             if (p1.localCol === p2.localCol && p1.localRow !== p2.localRow) {
                 const goingDown = p2.localRow > p1.localRow;
                 const startY = goingDown ? p1.y + p1.box.height * mainInset : p1.y - p1.box.height * mainInset;
@@ -2782,8 +2838,11 @@ function renderProcessorCanvases() {
             const points = groups[portNum].sort((first, second) => first.sequence - second.sequence);
             if (points.length <= 1) return;
             for (let pointIndex = 1; pointIndex < points.length; pointIndex++) {
-                const d = processorArrowPath(points[pointIndex - 1], points[pointIndex]);
-                paths += `<path d="${d}" stroke="#1e9bff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.88"></path>`;
+                const previous = points[pointIndex - 1], current = points[pointIndex];
+                const d = processorArrowPath(previous, current);
+                const direction = selectedRouteDirection('data');
+                const jumper = direction === 'horizontal' ? previous.localRow !== current.localRow : previous.localCol !== current.localCol;
+                paths += `<path d="${d}" stroke="${SCHEMATIC_TOKENS.data}" stroke-width="${jumper ? 1.9 : 1.55}" fill="none" stroke-linecap="square" stroke-linejoin="miter"${jumper ? ` stroke-dasharray="6 4"` : ""} marker-end="url(#${stageId}-data-arrow)" opacity="0.96"></path>`;
             }
         });
 
@@ -2791,7 +2850,7 @@ function renderProcessorCanvases() {
             <div class="canvas-card-header">
                 <span class="canvas-card-title">${controllerLabel}</span>
             </div>
-            ${stageGrid}<svg id="${stageId}-svg" style="position:absolute;inset:0;width:${stageWidth}px;height:${stageHeight}px;pointer-events:none;z-index:3;">${paths}</svg></div>
+            ${stageGrid}<svg id="${stageId}-svg" style="position:absolute;inset:0;width:${stageWidth}px;height:${stageHeight}px;pointer-events:none;z-index:3;"><defs><marker id="${stageId}-data-arrow" viewBox="0 0 10 10" refX="8.2" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="${SCHEMATIC_TOKENS.data}"/></marker></defs>${paths}</svg></div>
         </div>`;
     });
 
@@ -2849,10 +2908,10 @@ function getPdfControllerColorMaps(matrix) {
 }
 
 function createPdfMatrixTile(matrix, rowStart, rowEnd, colStart, colEnd, mode) {
-    const unitWidth = currentProductObj.pixelW || 1;
-    const ratio = (currentProductObj.pixelH || unitWidth) / unitWidth;
+    const unitWidth = currentProductObj.panelW || currentProductObj.pixelW || 1;
+    const ratio = (currentProductObj.panelH || currentProductObj.pixelH || unitWidth) / unitWidth;
     const baseW = 96;
-    const fullHeight = Math.min(140, Math.max(60, baseW * ratio));
+    const fullHeight = matrixVisualCellHeight(baseW, ratio);
     const halfHeight = fullHeight / 2;
     const tileCols = colEnd - colStart;
     const maps = getPdfControllerColorMaps(matrix);
@@ -2865,7 +2924,7 @@ function createPdfMatrixTile(matrix, rowStart, rowEnd, colStart, colEnd, mode) {
             if (isPower) {
                 const tone = powerMappingTone(cell.powerLabel);
                 const powerFont = adaptiveMatrixLabelPx(matrix, cell.powerLabel, baseW, height, 9);
-                html += `<div class="cab-module" data-pdf-row="${r}" data-pdf-col="${c}" style="height:${height}px;background:${tone.fill};border:1.5px solid ${tone.border};box-shadow:none;"><div class="power-text" style="font-size:${powerFont.toFixed(2)}px">${cell.powerLabel}</div></div>`;
+                html += `<div class="cab-module" data-pdf-row="${r}" data-pdf-col="${c}" style="height:${height}px;background:${tone.fill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};box-shadow:none;"><div class="power-text" style="font-size:${powerFont.toFixed(2)}px">${cell.powerLabel}</div></div>`;
             } else {
                 const cid = cell.controllerId || 1;
                 const toneIndex = maps.controllerIndexMap.get(cid) || 1;
@@ -2874,7 +2933,7 @@ function createPdfMatrixTile(matrix, rowStart, rowEnd, colStart, colEnd, mode) {
                 const fill = portFillColor(toneIndex, portIdx, r, c, document.getElementById('routeDirectionSelect')?.value, 'topology');
                 const powerFont = adaptiveMatrixLabelPx(matrix, cell.powerLabel, baseW, height, 8);
                 const portFont = adaptiveMatrixLabelPx(matrix, cell.portLabel, baseW, height, 8);
-                html += `<div class="cab-module" data-pdf-row="${r}" data-pdf-col="${c}" style="height:${height}px;background:${fill};"><div class="power-text" style="font-size:${powerFont.toFixed(2)}px">${cell.powerLabel}</div><div style="height:${Math.max(1, height * 0.08).toFixed(1)}px;"></div><div class="port-text" style="font-size:${portFont.toFixed(2)}px">${cell.portLabel}</div></div>`;
+                html += `<div class="cab-module" data-pdf-row="${r}" data-pdf-col="${c}" style="height:${height}px;background:${fill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};box-shadow:none;"><div class="power-text" style="font-size:${powerFont.toFixed(2)}px">${cell.powerLabel}</div><div style="height:${Math.max(1, height * 0.08).toFixed(1)}px;"></div><div class="port-text" style="font-size:${portFont.toFixed(2)}px">${cell.portLabel}</div></div>`;
             }
         }
     }
@@ -3002,26 +3061,29 @@ function drawPdfTileLines(tile, matrix, mode) {
         return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
     };
 
-    const drawGroups = (groups, color, laneOffset, usePowerTone, direction) => {
+    const drawGroups = (groups, color, laneOffset, usePowerTone, direction, routeMode) => {
         Object.entries(groups).forEach(([id, points]) => {
             points.sort((a, b) => a.seq - b.seq);
             const stroke = usePowerTone ? powerMappingTone(id).line : color;
             for (let i = 1; i < points.length; i++) {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', pathFor(points[i - 1], points[i], laneOffset, direction));
+                const previous = points[i - 1], current = points[i];
+                const jumper = direction === 'horizontal' ? previous.r !== current.r : previous.c !== current.c;
                 path.setAttribute('stroke', stroke);
-                path.setAttribute('stroke-width', mode === 'power' ? '2.1' : '2.3');
+                path.setAttribute('stroke-width', jumper ? '2.4' : routeMode === 'power' ? '1.8' : '1.55');
                 path.setAttribute('fill', 'none');
-                path.setAttribute('stroke-linecap', 'round');
-                path.setAttribute('stroke-linejoin', 'round');
+                path.setAttribute('stroke-linecap', 'square');
+                path.setAttribute('stroke-linejoin', 'miter');
+                if (jumper) path.setAttribute('stroke-dasharray', '6 4');
                 path.setAttribute('opacity', '0.96');
                 svg.appendChild(path);
             }
         });
     };
 
-    drawGroups(groupsPower, '#e8382c', 0, mode === 'power', powerDirection);
-    if (mode === 'topology') drawGroups(groupsData, '#007ee8', 0, false, dataDirection);
+    drawGroups(groupsPower, SCHEMATIC_TOKENS.power, 0, mode === 'power', powerDirection, 'power');
+    if (mode === 'topology') drawGroups(groupsData, SCHEMATIC_TOKENS.data, 0, false, dataDirection, 'data');
 }
 
 function preparePdfDetailPages() {
@@ -3115,11 +3177,15 @@ function wrapProcessorA4Pages() {
             pageTitle.textContent = 'Processor ' + (i + 1);
         }
         page.appendChild(pageTitle);
+        const legend = document.createElement('div');
+        legend.className = 'schematic-legend';
+        legend.innerHTML = '<span class="data"><i></i>Data cable</span><span class="data-jumper"><i></i>Data jumper</span>';
+        page.appendChild(legend);
         const pageData = getProcessorPdfPageData()[i];
         if (pageData) {
             const infoStrip = document.createElement('div');
             infoStrip.className = 'summary-strip';
-            infoStrip.innerHTML = renderInfoStripHtml(getProcessorInfoItems(pageData));
+            infoStrip.innerHTML = renderLargeInfoBoxes(getProcessorInfoItems(pageData), 'Processor configuration', 'Calculated quantities');
             page.appendChild(infoStrip);
         }
         page.appendChild(card);
@@ -3165,7 +3231,7 @@ function fitA4Pages() {
     const titleReserve = 70;
 
     function fitContainer(el, maxW, maxH) {
-        if (!el) return;
+        if (!el) return null;
         el.style.transform = '';
         el.style.transformOrigin = 'top left';
         el.style.width = '';
@@ -3173,13 +3239,14 @@ function fitA4Pages() {
         el.style.marginTop = '';
         const sw = el.scrollWidth || el.offsetWidth;
         const sh = el.scrollHeight || el.offsetHeight;
-        if (!sw || !sh) return;
-        const scale = Math.min(maxW / sw, maxH / sh);
+        if (!sw || !sh) return null;
+        const scale = Math.min(1, maxW / sw, maxH / sh);
         el.style.transform = 'scale(' + scale + ')';
         el.style.transformOrigin = 'top left';
         el.style.width = (100 / scale) + '%';
         el.style.marginLeft = '0px';
-        el.style.marginTop = Math.max(0, (maxH - sh * scale) / 2) + 'px';
+        el.style.marginTop = '0px';
+        return { width: sw * scale, height: sh * scale, scale };
     }
 
     const page1 = document.getElementById('a4page1');
@@ -3188,8 +3255,8 @@ function fitA4Pages() {
         const cabling = page1.querySelector('.a4-cabling');
         const statsHeight = stats ? stats.offsetHeight : 0;
         const cablingContent = cabling ? cabling.firstElementChild : null;
-        if (cabling) cabling.style.height = Math.max(120, pageHeight - titleReserve - statsHeight - 48) + 'px';
-        fitContainer(cablingContent, pageWidth - padX, Math.max(120, pageHeight - titleReserve - statsHeight - 48));
+        const fit = fitContainer(cablingContent, pageWidth - padX, Math.max(120, pageHeight - titleReserve - statsHeight - 48));
+        if (cabling && fit) cabling.style.height = Math.ceil(fit.height) + 'px';
     }
 
     const page2 = document.getElementById('a4page2');
@@ -3199,8 +3266,8 @@ function fitA4Pages() {
         const cablingContent = cabling ? cabling.firstElementChild : null;
         const infoHeight = infoStrip ? infoStrip.offsetHeight : 0;
         const availableHeight = pageHeight - titleReserve - infoHeight - 34;
-        if (cabling) cabling.style.height = availableHeight + 'px';
-        fitContainer(cablingContent, pageWidth - padX, availableHeight);
+        const fit = fitContainer(cablingContent, pageWidth - padX, availableHeight);
+        if (cabling && fit) cabling.style.height = Math.ceil(fit.height) + 'px';
     }
 
     document.querySelectorAll('.pdf-detail-page').forEach(function(page) {
@@ -3300,13 +3367,14 @@ function pdfAdaptiveLabelFont(pdf, matrix, text, box, preferredPt, heightFractio
     return Math.max(1.2, size);
 }
 
-function pdfGetMatrixLayout(matrix, x, y, w, h) {
+function pdfGetMatrixLayout(matrix, x, y, w, h, verticalAlign = 'center') {
     const rows = matrix.length;
     const cols = matrix[0]?.length || 1;
-    const unitWidth = currentProductObj.pixelW || 1;
+    const unitWidth = currentProductObj.panelW || currentProductObj.pixelW || 1;
     const rowRatios = Array.from({ length: rows }, (_, r) => {
-        const rowPixelH = matrix[r]?.[0]?.pixelH || currentProductObj.pixelH || unitWidth;
-        return Math.max(0.18, rowPixelH / unitWidth);
+        const rowDisplayH = matrix[r]?.[0]?.displayH || currentProductObj.panelH || currentProductObj.pixelH || unitWidth;
+        const rowDisplayW = matrix[r]?.[0]?.displayW || unitWidth;
+        return Math.max(0.125, rowDisplayH / rowDisplayW);
     });
     const ratioSum = rowRatios.reduce((sum, value) => sum + value, 0);
     const baseNoGap = Math.min(w / Math.max(1, cols), h / Math.max(0.1, ratioSum));
@@ -3319,7 +3387,7 @@ function pdfGetMatrixLayout(matrix, x, y, w, h) {
     const contentW = cols * cellW + gap * Math.max(0, cols - 1);
     const contentH = rowHeights.reduce((sum, value) => sum + value, 0) + gap * Math.max(0, rows - 1);
     const offsetX = x + Math.max(0, (w - contentW) / 2);
-    const offsetY = y + Math.max(0, (h - contentH) / 2);
+    const offsetY = verticalAlign === 'top' ? y : y + Math.max(0, (h - contentH) / 2);
     const rowOffsets = [0];
     for (let i = 0; i < rowHeights.length; i++) rowOffsets.push(rowOffsets[i] + rowHeights[i] + gap);
     return { rows, cols, x: offsetX, y: offsetY, w: contentW, h: contentH, gap, cellW, cellH: rowHeights[0] || cellW, rowHeights, rowOffsets };
@@ -3462,6 +3530,7 @@ function pdfDrawTopologyLegend(pdf, PW, PH) {
 }
 
 function pdfPathPoints(p1, p2, laneOffset, direction) {
+    const edgeDepth = 0.12;
     const verticalMainInset = 0.28;
     const horizontalMainInset = 0.18;
     const sideInset = 0.18;
@@ -3469,12 +3538,12 @@ function pdfPathPoints(p1, p2, laneOffset, direction) {
     if (direction === 'vertical') {
         if (p1.c === p2.c && p1.r !== p2.r) {
             const down = p2.r > p1.r;
-            return [[p1.x, down ? p1.y + p1.box.height * verticalMainInset : p1.y - p1.box.height * verticalMainInset], [p2.x, down ? p2.y - p2.box.height * verticalMainInset : p2.y + p2.box.height * verticalMainInset]];
+            return [[p1.x, down ? p1.box.bottom - p1.box.height * edgeDepth : p1.box.top + p1.box.height * edgeDepth], [p2.x, down ? p2.box.top + p2.box.height * edgeDepth : p2.box.bottom - p2.box.height * edgeDepth]];
         }
         if (p1.c !== p2.c) {
             const right = p2.c > p1.c;
-            const startX = right ? p1.box.right - p1.box.width * sideInset : p1.box.left + p1.box.width * sideInset;
-            const endX = right ? p2.box.left + p2.box.width * sideInset : p2.box.right - p2.box.width * sideInset;
+            const startX = right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
+            const endX = right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
             const seamX = right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
             const startY = p1.y + laneOffset;
             const endY = p2.y + laneOffset;
@@ -3483,12 +3552,12 @@ function pdfPathPoints(p1, p2, laneOffset, direction) {
     } else {
         if (p1.r === p2.r && p1.c !== p2.c) {
             const right = p2.c > p1.c;
-            return [[right ? p1.x + p1.box.width * horizontalMainInset : p1.x - p1.box.width * horizontalMainInset, p1.y], [right ? p2.x - p2.box.width * horizontalMainInset : p2.x + p2.box.width * horizontalMainInset, p2.y]];
+            return [[right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth, p1.y], [right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth, p2.y]];
         }
         if (p1.r !== p2.r) {
             const down = p2.r > p1.r;
-            const startY = down ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
-            const endY = down ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
+            const startY = down ? p1.box.bottom - p1.box.height * edgeDepth : p1.box.top + p1.box.height * edgeDepth;
+            const endY = down ? p2.box.top + p2.box.height * edgeDepth : p2.box.bottom - p2.box.height * edgeDepth;
             const seamY = (down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
             const startX = p1.x + laneOffset;
             const endX = p2.x + laneOffset;
@@ -3499,6 +3568,7 @@ function pdfPathPoints(p1, p2, laneOffset, direction) {
 }
 
 function pdfPowerPathPoints(p1, p2, laneOffset, direction) {
+    const edgeDepth = 0.12;
     const mid = (a, b) => (a + b) / 2;
     const verticalMainInset = 0.18;
     const horizontalMainInset = 0.18;
@@ -3506,14 +3576,14 @@ function pdfPowerPathPoints(p1, p2, laneOffset, direction) {
     if (direction === 'vertical') {
         if (p1.c === p2.c && p1.r !== p2.r) {
             const down = p2.r > p1.r;
-            const startY = down ? p1.y + p1.box.height * verticalMainInset : p1.y - p1.box.height * verticalMainInset;
-            const endY = down ? p2.y - p2.box.height * verticalMainInset : p2.y + p2.box.height * verticalMainInset;
+            const startY = down ? p1.box.bottom - p1.box.height * edgeDepth : p1.box.top + p1.box.height * edgeDepth;
+            const endY = down ? p2.box.top + p2.box.height * edgeDepth : p2.box.bottom - p2.box.height * edgeDepth;
             return [[p1.x, startY], [p2.x, endY]];
         }
         if (p1.c !== p2.c) {
             const right = p2.c > p1.c;
-            const startX = right ? p1.box.right - p1.box.width * sideInset : p1.box.left + p1.box.width * sideInset;
-            const endX = right ? p2.box.left + p2.box.width * sideInset : p2.box.right - p2.box.width * sideInset;
+            const startX = right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
+            const endX = right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
             const seamX = right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
             const startY = p1.y + laneOffset;
             const endY = p2.y + laneOffset;
@@ -3524,14 +3594,14 @@ function pdfPowerPathPoints(p1, p2, laneOffset, direction) {
     } else {
         if (p1.r === p2.r && p1.c !== p2.c) {
             const right = p2.c > p1.c;
-            const startX = right ? p1.x + p1.box.width * horizontalMainInset : p1.x - p1.box.width * horizontalMainInset;
-            const endX = right ? p2.x - p2.box.width * horizontalMainInset : p2.x + p2.box.width * horizontalMainInset;
+            const startX = right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
+            const endX = right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
             return [[startX, p1.y], [endX, p2.y]];
         }
         if (p1.r !== p2.r) {
             const down = p2.r > p1.r;
-            const startY = down ? p1.box.bottom - p1.box.height * sideInset : p1.box.top + p1.box.height * sideInset;
-            const endY = down ? p2.box.top + p2.box.height * sideInset : p2.box.bottom - p2.box.height * sideInset;
+            const startY = down ? p1.box.bottom - p1.box.height * edgeDepth : p1.box.top + p1.box.height * edgeDepth;
+            const endY = down ? p2.box.top + p2.box.height * edgeDepth : p2.box.bottom - p2.box.height * edgeDepth;
             const seamY = (down ? mid(p1.box.bottom, p2.box.top) : mid(p1.box.top, p2.box.bottom)) + laneOffset;
             const startX = p1.x + laneOffset;
             const endX = p2.x + laneOffset;
@@ -3543,7 +3613,7 @@ function pdfPowerPathPoints(p1, p2, laneOffset, direction) {
     return [[p1.x, p1.y], [p2.x, p2.y]];
 }
 
-function pdfDrawPolyline(pdf, points, color, width, trimEnd = 0) {
+function pdfDrawPolyline(pdf, points, color, width, trimEnd = 0, dashed = false) {
     if (!points || points.length < 2) return;
     const drawPoints = points.map(point => [point[0], point[1]]);
     if (trimEnd > 0 && drawPoints.length >= 2) {
@@ -3557,7 +3627,9 @@ function pdfDrawPolyline(pdf, points, color, width, trimEnd = 0) {
     }
     pdfSetColor(pdf, 'setDrawColor', color, [17, 24, 39]);
     pdf.setLineWidth(width);
+    if (typeof pdf.setLineDashPattern === 'function') pdf.setLineDashPattern(dashed ? [1.7, 1.2] : [], 0);
     for (let i = 1; i < drawPoints.length; i++) pdf.line(drawPoints[i - 1][0], drawPoints[i - 1][1], drawPoints[i][0], drawPoints[i][1]);
+    if (typeof pdf.setLineDashPattern === 'function') pdf.setLineDashPattern([], 0);
 }
 
 function pdfDrawArrowHead(pdf, p1, p2, color, size) {
@@ -3574,6 +3646,40 @@ function pdfDrawArrowHead(pdf, p1, p2, color, size) {
     pdf.triangle(p2[0], p2[1], left[0], left[1], right[0], right[1], 'F');
 }
 
+function pdfDrawLargeSummaryBox(pdf, title, items, x, y, w, h) {
+    pdf.setFillColor(255, 255, 255);
+    pdf.setDrawColor(190, 198, 210);
+    pdf.setLineWidth(0.24);
+    pdf.rect(x, y, w, h, 'FD');
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.4);
+    pdf.setTextColor(17, 24, 39);
+    pdf.text(title, x + 4, y + 6);
+    const cols = 2;
+    const colW = (w - 8) / cols;
+    const rows = Math.ceil(items.length / cols);
+    const rowH = Math.max(8, (h - 11) / Math.max(1, rows));
+    items.forEach(([label, value], index) => {
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+        const tx = x + 4 + col * colW;
+        const ty = y + 11 + row * rowH;
+        if (col) {
+            pdf.setDrawColor(225, 229, 235);
+            pdf.setLineWidth(0.12);
+            pdf.line(tx - 2, ty - 3.5, tx - 2, ty + 3.5);
+        }
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(5.1);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(String(label || ''), tx, ty);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(6.1);
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(String(value || '-'), tx, ty + 3.2, { maxWidth: colW - 4 });
+    });
+}
+
 function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
     if (!lastMatrix?.length) return;
     const margin = 26;
@@ -3583,10 +3689,12 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
     pdf.rect(0, 0, PW, PH, 'F');
     if (_pdfLetterheadImage) pdf.addImage(_pdfLetterheadImage, 'PNG', 0, 0, PW, PH);
     pdfDrawSectionTitle(pdf, pageTitle, margin, headerBottom + 6);
-    let top = headerBottom + 11;
-    if (mode === 'power') top += pdfDrawInfoStrip(pdf, getPowerInfoItems(), margin, top, PW - margin * 2, 4) + 4;
-    if (includeStats) top += pdfDrawStats(pdf, margin, top, PW - margin * 2) + 6;
-    const layout = pdfGetMatrixLayout(lastMatrix, margin, top, PW - margin * 2, footerTop - top);
+    pdfDrawInlineLegend(pdf, margin, headerBottom + 10.5, mode);
+    const top = headerBottom + 15;
+    const summaryH = 43;
+    const maxSummaryY = footerTop - summaryH;
+    const layout = pdfGetMatrixLayout(lastMatrix, margin, top, PW - margin * 2, maxSummaryY - top - 7, 'top');
+    const summaryY = Math.min(maxSummaryY, layout.y + layout.h + 7);
     const dataDirection = selectedRouteDirection('data');
     const powerDirection = selectedRouteDirection('power');
     const maps = getPdfControllerColorMaps(lastMatrix);
@@ -3603,7 +3711,7 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
             if (mode === 'power') {
                 const tone = powerMappingTone(cell.powerLabel);
                 const fillRgb = pdfColorToRgb(tone.fill);
-                pdfSetColor(pdf, 'setDrawColor', tone.border, [255, 126, 110]);
+                pdfSetColor(pdf, 'setDrawColor', SCHEMATIC_TOKENS.cabinetBorder, [203, 213, 225]);
                 if (fillRgb) {
                     pdf.setFillColor(fillRgb[0], fillRgb[1], fillRgb[2]);
                     pdf.rect(box.left, box.top, box.width, box.height, 'FD');
@@ -3617,7 +3725,7 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 const portIdx = maps.portIndexMap.get(cid)?.get(portNum) ?? 0;
                 const fill = portFillColor(toneIndex, portIdx, r, c, dataDirection, 'topology');
                 const fillRgb = pdfColorToRgb(fill);
-                pdf.setDrawColor(31, 41, 55);
+                pdfSetColor(pdf, 'setDrawColor', SCHEMATIC_TOKENS.cabinetBorder, [203, 213, 225]);
                 pdf.setLineWidth(0.08);
                 if (fillRgb) {
                     pdf.setFillColor(fillRgb[0], fillRgb[1], fillRgb[2]);
@@ -3632,8 +3740,8 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 if (!groupsPower[id]) groupsPower[id] = [];
                 groupsPower[id].push({
                     seq: parseInt(powerMatch[2], 10),
-                    x: mode === 'power' ? cx : powerDirection === 'vertical' ? cx - box.width * 0.18 : cx,
-                    y: powerDirection === 'horizontal' ? box.top + box.height * 0.25 : cy,
+                    x: powerDirection === 'vertical' ? box.left + box.width * .26 : cx,
+                    y: powerDirection === 'horizontal' ? box.top + box.height * .22 : cy,
                     r, c, box
                 });
             }
@@ -3642,14 +3750,14 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 if (dataMatch) {
                     const id = `D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
-                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: dataDirection === 'vertical' ? cx + box.width * 0.18 : cx, y: dataDirection === 'vertical' ? cy : box.top + box.height * 0.75, r, c, box });
+                    groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: dataDirection === 'vertical' ? box.left + box.width * .74 : cx, y: dataDirection === 'vertical' ? cy : box.top + box.height * .78, r, c, box });
                 }
             }
             labels.push({ cell, x: cx, y: cy, box });
         }
     }
 
-    const drawGroups = (groups, color, laneOffset, powerTone, arrow, direction) => {
+    const drawGroups = (groups, color, laneOffset, powerTone, arrow, direction, routeMode) => {
         Object.entries(groups).forEach(([id, points]) => {
             points.sort((a, b) => a.seq - b.seq);
             const stroke = powerTone ? powerMappingTone(id).line : color;
@@ -3657,14 +3765,15 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
                 const pts = arrow ? pdfPowerPathPoints(points[i - 1], points[i], laneOffset, direction) : pdfPathPoints(points[i - 1], points[i], laneOffset, direction);
                 const arrowSize = 0.9;
                 const isJumper = direction === 'horizontal' ? points[i - 1].r !== points[i].r : points[i - 1].c !== points[i].c;
-                const width = (mode === 'power' ? 0.36 : 0.4) + (isJumper ? 0.14 : 0);
-                pdfDrawPolyline(pdf, pts, stroke, width, arrow ? arrowSize * 1.15 : 0);
-                if (arrow && pts.length >= 2) pdfDrawArrowHead(pdf, pts[pts.length - 2], pts[pts.length - 1], stroke, arrowSize);
+                const routeStroke = stroke;
+                const width = isJumper ? 0.5 : routeMode === 'power' ? 0.34 : 0.3;
+                pdfDrawPolyline(pdf, pts, routeStroke, width, 0, isJumper);
+                if (pts.length >= 2) pdfDrawArrowHead(pdf, pts[pts.length - 2], pts[pts.length - 1], routeStroke, 0.9);
             }
         });
     };
-    drawGroups(groupsPower, '#e8382c', 0, mode === 'power', mode === 'power', powerDirection);
-    if (mode === 'topology') drawGroups(groupsData, '#007ee8', 0, false, false, dataDirection);
+    drawGroups(groupsPower, SCHEMATIC_TOKENS.power, 0, mode === 'power', true, powerDirection, 'power');
+    if (mode === 'topology') drawGroups(groupsData, SCHEMATIC_TOKENS.data, 0, false, true, dataDirection, 'data');
 
     labels.forEach(({ cell, x, y, box }) => {
         if (mode === 'power') {
@@ -3678,6 +3787,27 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
             pdfDrawBadgeText(pdf, cell.portLabel, x, y + gap, portFont, '#111827', 'bold');
         }
     });
+
+    const stats = getPdfStatsData();
+    const statMap = new Map(stats.map(([key, value]) => [key, value]));
+    const flattenCards = cards => cards.flatMap(card => [...(card.left || []), ...(card.right || [])]).map(item => [item.label, item.value]);
+    const powerCards = getPowerInfoItems();
+    const selectedItems = mode === 'power' ? flattenCards(powerCards.slice(0, 2)) : [
+        ['Total resolution', statMap.get('Total Resolution') || '-'],
+        ['Screen size', statMap.get('Screen Size') || '-'],
+        ['Master canvas', statMap.get('Master Canvas') || '-'],
+        ['Processors', statMap.get('Processors') || '-']
+    ];
+    const calculatedItems = mode === 'power' ? flattenCards(powerCards.slice(2)) : [
+        ['Main power', statMap.get('Main Power') || '-'],
+        ['Main data', statMap.get('Main Data') || '-'],
+        ['Short power / jumpers', `${statMap.get('Short Power') || '-'} / ${statMap.get('Power Jumpers') || '-'}`],
+        ['Short data / jumpers', `${statMap.get('Short Data') || '-'} / ${statMap.get('Data Jumpers') || '-'}`]
+    ];
+    const boxGap = 5;
+    const boxW = (PW - margin * 2 - boxGap) / 2;
+    pdfDrawLargeSummaryBox(pdf, mode === 'power' ? 'Display configuration' : 'Processor configuration', selectedItems, margin, summaryY, boxW, summaryH);
+    pdfDrawLargeSummaryBox(pdf, 'Calculated quantities', calculatedItems, margin + boxW + boxGap, summaryY, boxW, summaryH);
 }
 
 function getProcessorPdfPageData() {
@@ -3763,10 +3893,13 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
     pdf.rect(0, 0, PW, PH, 'F');
     if (_pdfLetterheadImage) pdf.addImage(_pdfLetterheadImage, 'PNG', 0, 0, PW, PH);
     pdfDrawSectionTitle(pdf, pageData.title, margin, headerBottom + 6);
-    const top = headerBottom + 11 + pdfDrawInfoStrip(pdf, getProcessorInfoItems(pageData), margin, headerBottom + 11, PW - margin * 2, 4) + 4;
+    pdfDrawInlineLegend(pdf, margin, headerBottom + 10.5, 'data');
+    const top = headerBottom + 15;
+    const summaryH = 43;
+    const maxSummaryY = footerTop - summaryH;
     const gap = 0.28;
     const availableW = PW - margin * 2;
-    const availableH = footerTop - top;
+    const availableH = maxSummaryY - top - 7;
     const totalRatio = pageData.rowRatios.reduce((sum, value) => sum + value, 0);
     const base = Math.min(
         (availableW - gap * (pageData.canvasCols - 1)) / pageData.canvasCols,
@@ -3776,7 +3909,8 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
     const gridW = pageData.canvasCols * base + gap * (pageData.canvasCols - 1);
     const gridH = rowHeights.reduce((sum, height) => sum + height, 0) + gap * (pageData.canvasRows - 1);
     const startX = margin + (availableW - gridW) / 2;
-    const startY = top + (availableH - gridH) / 2;
+    const startY = top;
+    const summaryY = Math.min(maxSummaryY, startY + gridH + 7);
     const rowOffsets = [0];
     for (let i = 0; i < rowHeights.length; i++) rowOffsets.push(rowOffsets[i] + rowHeights[i] + gap);
 
@@ -3803,9 +3937,8 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
                 const cell = item.cell;
                 const portNum = parseInt(cell.portLabel.match(/D(\d+)/)?.[1] || '1', 10);
                 const portOrder = pageData.portIndex.get(portNum) ?? 0;
-                const fill = portFillColor(pageData.toneIndex, portOrder, localRow, localCol, document.getElementById('routeDirectionSelect')?.value, 'processor');
-                const fillRgb = pdfColorToRgb(fill);
-                pdf.setDrawColor(fillRgb ? 255 : 203, fillRgb ? 255 : 213, fillRgb ? 255 : 225);
+                const fillRgb = pdfColorToRgb(SCHEMATIC_TOKENS.cabinetFill);
+                pdfSetColor(pdf, 'setDrawColor', SCHEMATIC_TOKENS.cabinetBorder, [203, 213, 225]);
                 pdf.setLineWidth(0.08);
                 if (fillRgb) {
                     pdf.setFillColor(fillRgb[0], fillRgb[1], fillRgb[2]);
@@ -3842,7 +3975,9 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
             const pts = pdfPathPoints(points[i - 1], points[i], 0, document.getElementById('routeDirectionSelect')?.value || 'vertical');
             const direction = document.getElementById('routeDirectionSelect')?.value || 'vertical';
             const isJumper = direction === 'horizontal' ? points[i - 1].r !== points[i].r : points[i - 1].c !== points[i].c;
-            pdfDrawPolyline(pdf, pts, '#1e9bff', isJumper ? 0.5 : 0.36);
+            const routeColor = SCHEMATIC_TOKENS.data;
+            pdfDrawPolyline(pdf, pts, routeColor, isJumper ? 0.36 : 0.3, 0, isJumper);
+            if (pts.length >= 2) pdfDrawArrowHead(pdf, pts[pts.length - 2], pts[pts.length - 1], routeColor, 0.9);
         }
     });
 
@@ -3850,6 +3985,15 @@ function pdfDrawProcessorCanvasPage(pdf, pageData, PW, PH) {
         const fontSize = pdfAdaptiveLabelFont(pdf, lastMatrix, item.label, item.box, 4.8, 0.3);
         pdfDrawBadgeText(pdf, item.label, item.x, item.y, fontSize, '#111827', 'bold');
     });
+
+    const infoCards = getProcessorInfoItems(pageData);
+    const flattenCards = cards => cards.flatMap(card => [...(card.left || []), ...(card.right || [])]).map(item => [item.label, item.value]);
+    const selectedItems = flattenCards(infoCards.slice(0, 2));
+    const calculatedItems = flattenCards(infoCards.slice(2));
+    const boxGap = 5;
+    const boxW = (PW - margin * 2 - boxGap) / 2;
+    pdfDrawLargeSummaryBox(pdf, 'Processor configuration', selectedItems, margin, summaryY, boxW, summaryH);
+    pdfDrawLargeSummaryBox(pdf, 'Calculated quantities', calculatedItems, margin + boxW + boxGap, summaryY, boxW, summaryH);
 }
 
 function drawVectorPdfIntroPages(pdf, PW, PH) {
@@ -3923,12 +4067,14 @@ window.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SYNC_MAPPING') {
         if (window.parent !== window) document.body.classList.add('embedded-report');
         // 必须解构 hasHalfSupport
-        const { model, fullCount, system, bandwidth, pixelW, pixelH, power, hasHalfSupport, productCategory, cols, rows, halfRow, bitRate, voltageSpec, routeDirection, powerRouteDirection, masterCanvas } = event.data;
+        const { model, fullCount, system, bandwidth, pixelW, pixelH, panelW, panelH, power, hasHalfSupport, productCategory, cols, rows, halfRow, bitRate, voltageSpec, routeDirection, powerRouteDirection, masterCanvas } = event.data;
         const hasExplicitDimensions = Number.isFinite(parseInt(cols, 10)) && Number.isFinite(parseInt(rows, 10));
         
         if (model) currentProductObj.model = model;
         if (pixelW !== undefined) currentProductObj.pixelW = pixelW;
         if (pixelH !== undefined) currentProductObj.pixelH = pixelH;
+        if (panelW !== undefined) currentProductObj.panelW = panelW;
+        if (panelH !== undefined) currentProductObj.panelH = panelH;
         if (power !== undefined) currentProductObj.power = power;
         if (fullCount !== undefined) _fullCount = fullCount;
         if (system) _currentSystem = system;
