@@ -2024,21 +2024,38 @@ function quoteExportRows() {
     return rows;
 }
 function exportQuoteExcel() {
-    const headers = ["序号", "Part Name", "Chinese Description", "Quantity", "Unit", "Note"];
+    const headers = ["序号", "SAP", "Part Name", "Chinese Description", "Quantity", "Unit", "Note"];
     let no = 1;
-    const body = quoteExportRows().filter(row => !row.section).map(row => {
-        const cells = [no++, row.product, row.chineseDescription || row.description, row.qty, row.unit, row.note || ""];
-        return `<tr>${cells.map(cell => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`;
+    const body = quoteExportRows().map(row => {
+        if (row.section) {
+            return `<tr class="section-row"><td colspan="${headers.length}">${escapeHtml(row.sectionLabel || sectionDisplayName(row.section))}</td></tr>`;
+        }
+        const cells = [
+            { value: no++, className: "no" },
+            { value: row.sap || "-", className: "sap" },
+            { value: row.product, className: "part-name" },
+            { value: row.chineseDescription || row.description, className: "description" },
+            { value: row.qty, className: "quantity" },
+            { value: row.unit, className: "unit" },
+            { value: row.note || "", className: "note" }
+        ];
+        return `<tr>${cells.map(cell => `<td class="${cell.className}">${escapeHtml(cell.value)}</td>`).join("")}</tr>`;
     }).join("");
     const html = `<!doctype html><html><head><meta charset="utf-8"><style>
-        table{border-collapse:collapse;font-family:Arial,'Microsoft YaHei',sans-serif;font-size:11pt;}
-        th{background:#1f4e79;color:#fff;font-weight:700;text-align:center;}
-        th,td{border:1px solid #cbd5e1;padding:6px 8px;vertical-align:top;}
-        td:nth-child(1),td:nth-child(4),td:nth-child(5){text-align:center;white-space:nowrap;}
-        td:nth-child(2){min-width:180px;}
-        td:nth-child(3){min-width:460px;}
-        td:nth-child(6){min-width:240px;}
-    </style></head><body><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></body></html>`;
+        body{margin:0;background:#fff;}
+        table{border-collapse:collapse;font-family:Arial,'Microsoft YaHei',sans-serif;font-size:10.5pt;color:#111827;}
+        col.no{width:52px;} col.sap{width:132px;} col.part-name{width:190px;} col.description{width:520px;} col.quantity{width:82px;} col.unit{width:72px;} col.note{width:260px;}
+        th{background:#b00016;color:#fff;font-weight:700;text-align:center;border:1px solid #b00016;padding:8px 9px;vertical-align:middle;}
+        td{border:1px solid #d9e2ec;padding:7px 9px;vertical-align:top;line-height:1.35;white-space:normal;}
+        tr:nth-child(even):not(.section-row) td{background:#f8fafc;}
+        .section-row td{background:#eef2f7;color:#101828;font-weight:800;border-top:2px solid #b00016;border-bottom:1px solid #cbd5e1;padding:8px 10px;}
+        td.no,td.quantity,td.unit{text-align:center;white-space:nowrap;}
+        td.sap{mso-number-format:"\\@";white-space:nowrap;color:#0f172a;font-weight:600;}
+        td.part-name{font-weight:700;color:#111827;}
+        td.description,td.note{color:#334155;}
+    </style></head><body><table>
+        <colgroup><col class="no"><col class="sap"><col class="part-name"><col class="description"><col class="quantity"><col class="unit"><col class="note"></colgroup>
+        <thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></body></html>`;
     const blob = new Blob([html], { type: "application/vnd.ms-excel" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
