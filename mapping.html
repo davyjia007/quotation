@@ -79,11 +79,11 @@
         .schematic-legend .power-jumper i { border-color:#e31b23; border-top-style:dashed; }
         .schematic-legend .data-jumper i { border-color:#1d4ed8; border-top-style:dashed; }
         .a4-page-subtitle { display:block; margin-top:4px; font-size:0.68rem; color:#9aa6b5; font-weight:600; letter-spacing:0; }
-        .summary-strip { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:10px 0 0; order:4; }
+        .summary-strip { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:8px 0 0; order:4; flex:0 0 auto; align-self:stretch; }
         .summary-panel-box { border:1px solid #cbd5e1; background:#fff; padding:10px 12px; min-width:0; }
         .summary-panel-box h3 { margin:0 0 8px; color:#111827; font-size:0.7rem; }
         .summary-panel-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px 12px; }
-        #a4page1 .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:10px 0 0; padding:0; background:transparent; border:0; box-shadow:none; order:4; }
+        #a4page1 .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:8px 0 0; padding:0; background:transparent; border:0; box-shadow:none; order:4; flex:0 0 auto; align-self:stretch; }
         .summary-pill { border:1px solid #d8e0eb; background:#f8fafc; border-radius:10px; padding:6px 8px; min-width:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
         .summary-col + .summary-col { border-left:1px solid #d8e0eb; padding-left:8px; }
         .summary-entry + .summary-entry { margin-top:3px; }
@@ -181,7 +181,7 @@
         .processor-page-title .canvas-card-title,
         .processor-page-title .canvas-card-meta { color:inherit; font-size:inherit; line-height:1.2; font-weight:700; letter-spacing:inherit; }
         .processor-page-title .canvas-card-meta { opacity:0.78; }
-        .a4-cabling { flex:1 1 auto; overflow:hidden; text-align:left; position:relative; }
+        .a4-cabling { flex:0 0 auto; overflow:hidden; text-align:left; position:relative; }
         .a4-cabling > div { transform-origin:top left; }
         .a4-page .stats-grid { flex:0 0 auto; margin-bottom:0; }
         .a4-page .canvas-card { margin:0 auto; }
@@ -204,6 +204,7 @@
         body.embedded-report .config-panel { display:none !important; }
         body.embedded-report .right-panel { width:794px; overflow:visible; }
         body.embedded-report .a4-page { margin:0 0 20px; box-shadow:none; }
+        body.embedded-report .a4-cabling { flex:0 0 auto; }
         body.embedded-report .matrix-visual { gap:3px; padding:10px; border-radius:10px; }
         body.embedded-report .cab-module { border-radius:0; }
         body.embedded-report .stats-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; padding:8px; border-radius:10px; }
@@ -1768,7 +1769,7 @@ function drawCablingLines() {
     }
     
     const getTopologyPath = (p1, p2, laneOffset = 0, direction = 'vertical') => {
-        const edgeDepth = 0.12;
+        const edgeDepth = 0.18;
         const verticalMainInset = 0.28;
         const horizontalMainInset = 0.18;
         const sideInset = 0.18;
@@ -1786,9 +1787,9 @@ function drawCablingLines() {
                 const goingRight = p2.c > p1.c;
                 const startX = goingRight ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
                 const endX = goingRight ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
-                const seamX = goingRight ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
-                const startY = p1.y + laneOffset;
-                const endY = p2.y + laneOffset;
+                const seamX = (goingRight ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right)) + laneOffset;
+                const startY = p1.y;
+                const endY = p2.y;
                 if (p1.r === p2.r) {
                     return `M ${startX} ${startY} L ${seamX} ${startY} L ${endX} ${startY}`;
                 }
@@ -1837,8 +1838,11 @@ function drawCablingLines() {
             }
         }
     };
-    drawGroup(powerGroups, SCHEMATIC_TOKENS.power, 0, powerDirection, 'power');
-    drawGroup(portGroups, SCHEMATIC_TOKENS.data, 0, dataDirection, 'data');
+    const sampleCabinet = container.querySelector('.cab-module');
+    const sampleRect = sampleCabinet?.getBoundingClientRect();
+    const routeLane = sampleRect ? Math.max(1.2, Math.min(5, Math.min(sampleRect.width, sampleRect.height) * .08)) : 2;
+    drawGroup(powerGroups, SCHEMATIC_TOKENS.power, -routeLane, powerDirection, 'power');
+    drawGroup(portGroups, SCHEMATIC_TOKENS.data, routeLane, dataDirection, 'data');
 }
 
 // ======================= Processor Canvas  ?? ?=======================
@@ -2292,20 +2296,20 @@ function adaptiveMatrixLabelPx(matrix, label, cellWidth, cellHeight, maxSize = 8
     const rows = matrix.length;
     const cols = matrix[0]?.length || 1;
     const density = Math.max(1, resolution.width / 1920, resolution.height / 1080, cols / 12, rows / 8);
-    const byWidth = (cellWidth * 0.78) / Math.max(1, String(label || "").length * 0.62);
-    const byHeight = cellHeight * 0.34;
-    return Math.max(3, Math.min((maxSize * 1.35) / Math.pow(density, 0.25), byWidth, byHeight));
+    const byWidth = (cellWidth * 0.68) / Math.max(1, String(label || "").length * 0.62);
+    const byHeight = cellHeight * 0.22;
+    return Math.max(2.6, Math.min((maxSize * 1.2) / Math.pow(density, 0.25), byWidth, byHeight));
 }
 
 function matrixVisualCellWidth(cols) {
-    if (!document.body.classList.contains('embedded-report')) return 96;
+    if (!document.body.classList.contains('embedded-report')) return 78;
     // The iframe can be rendered while its parent appendix is still hidden,
     // so layout measurements may be zero here. Embedded A4 pages are fixed at
     // 794px with 36px horizontal padding on each side.
     const contentWidth = 722;
     const gap = 3;
     const padding = 20;
-    return Math.max(12, Math.floor((contentWidth - padding - gap * Math.max(0, cols - 1)) / Math.max(1, cols)));
+    return Math.min(72, Math.max(12, Math.floor((contentWidth - padding - gap * Math.max(0, cols - 1)) / Math.max(1, cols))));
 }
 
 function matrixVisualCellHeight(cellWidth, ratio) {
@@ -2342,8 +2346,8 @@ function renderDynamicVisual(matrix) {
             const portIdx = portIndexMap.get(cid)?.get(portNum) ?? 0;
             const portCount = portIndexMap.get(cid)?.size || 1;
             const portFill = portFillColor(controllerToneIndex, portIdx, r, c, document.getElementById('routeDirectionSelect')?.value, 'topology');
-            const powerFont = adaptiveMatrixLabelPx(matrix, mod.powerLabel, baseW, height, 8);
-            const portFont = adaptiveMatrixLabelPx(matrix, mod.portLabel, baseW, height, 8);
+            const powerFont = adaptiveMatrixLabelPx(matrix, mod.powerLabel, baseW, height, 7.5);
+            const portFont = adaptiveMatrixLabelPx(matrix, mod.portLabel, baseW, height, 7.5);
             html += `<div class="cab-module" data-row="${r}" data-col="${c}" style="width:${baseW}px;height:${height}px;background:${portFill};border-color:${SCHEMATIC_TOKENS.cabinetBorder};box-shadow:none;">
                         <div class="power-text" style="font-size:${powerFont.toFixed(2)}px">${mod.powerLabel}</div>
                         <div style="height:${Math.max(1, height * 0.08).toFixed(1)}px;"></div>
@@ -2373,7 +2377,7 @@ function renderPowerMapping(matrix) {
             const cell = matrix[r][c];
             const height = cell.type === "Half" ? halfHeight : fullHeight;
             const tone = powerMappingTone(cell.powerLabel);
-            const fontSize = adaptiveMatrixLabelPx(matrix, cell.powerLabel, baseW, height, 9);
+            const fontSize = adaptiveMatrixLabelPx(matrix, cell.powerLabel, baseW, height, 8);
             html += `<div class="cab-module" data-power-row="${r}" data-power-col="${c}" style="width:${baseW}px;height:${height}px;background:${tone.fill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};box-shadow:none;">
                         <div class="power-text" style="font-size:${fontSize.toFixed(2)}px">${cell.powerLabel}</div>
                     </div>`;
@@ -2464,7 +2468,7 @@ function drawPowerMappingLines() {
     };
 
     const powerArrowPath = (previous, current) => {
-        const insideRatio = 0.12;
+        const insideRatio = 0.18;
         if (previous.r !== current.r && previous.c === current.c) {
             const goingDown = current.r > previous.r;
             const startY = goingDown ? previous.box.bottom - previous.box.height * insideRatio : previous.box.top + previous.box.height * insideRatio;
@@ -2783,7 +2787,8 @@ function renderProcessorCanvases() {
                     const portNum = parseInt(cell.portLabel.match(/D(\d+)/)?.[1] || '1', 10);
                     const portOrder = portIndex.get(portNum) ?? 0;
                     const fill = portFillColor(toneIndex, portOrder, localRow, localCol, document.getElementById('routeDirectionSelect')?.value, 'processor');
-                    const fontSize = Math.max(6, Math.min(10, cellWidth * 0.27, rowHeight * 0.34));
+                    const labelWidthLimit = (cellWidth * .68) / Math.max(1, String(cell.portLabel || '').length * .58);
+                    const fontSize = Math.max(3, Math.min(8.5, labelWidthLimit, rowHeight * .22));
                     stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:${SCHEMATIC_TOKENS.cabinetFill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};border-radius:0;box-shadow:none;display:flex;align-items:center;justify-content:center;color:${SCHEMATIC_TOKENS.label};font-size:${fontSize}px;font-family:Inter,'Segoe UI',sans-serif;font-weight:650;line-height:1;white-space:nowrap;overflow:hidden;" title="${cell.portLabel}">${cell.portLabel}</div>`;
                 } else {
                     stageGrid += `<div style="width:${cellWidth}px;height:${rowHeight}px;background:${SCHEMATIC_TOKENS.cabinetAltFill};border:1px solid ${SCHEMATIC_TOKENS.cabinetBorder};border-radius:0;"></div>`;
@@ -2812,10 +2817,10 @@ function renderProcessorCanvases() {
 
         let paths = '';
         const laneOffset = 0;
-        // 连续网线路径：进入箱体 12%，并在目标箱体内显示方向箭头
+        // 连续网线路径：适度进入箱体，并在目标箱体内显示方向箭头
         const processorArrowPath = (p1, p2) => {
             const mainInset = 0.38;
-            const sideInset = 0.12;
+            const sideInset = 0.18;
             if (p1.localCol === p2.localCol && p1.localRow !== p2.localRow) {
                 const goingDown = p2.localRow > p1.localRow;
                 const startY = goingDown ? p1.y + p1.box.height * mainInset : p1.y - p1.box.height * mainInset;
@@ -3014,7 +3019,7 @@ function drawPdfTileLines(tile, matrix, mode) {
             if (mode === 'topology') {
                 const dataMatch = cell.portLabel.match(/D(\d+)-(\d+)/);
                 if (dataMatch) {
-                    const id = `D${dataMatch[1]}`;
+                    const id = `M${cell.controllerId || 1}-D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
                     groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: dataDirection === 'vertical' ? cx + 12 : cx, y: dataDirection === 'vertical' ? cy : box.top + box.height * 0.75, r, c, box });
                 }
@@ -3036,9 +3041,9 @@ function drawPdfTileLines(tile, matrix, mode) {
                 const right = p2.c > p1.c;
                 const startX = right ? p1.box.right - p1.box.width * sideInset : p1.box.left + p1.box.width * sideInset;
                 const endX = right ? p2.box.left + p2.box.width * sideInset : p2.box.right - p2.box.width * sideInset;
-                const seamX = right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
-                const startY = p1.y + laneOffset;
-                const endY = p2.y + laneOffset;
+                const seamX = (right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right)) + laneOffset;
+                const startY = p1.y;
+                const endY = p2.y;
                 return p1.r === p2.r ? `M ${startX} ${startY} L ${seamX} ${startY} L ${endX} ${startY}` : `M ${startX} ${startY} L ${seamX} ${startY} L ${seamX} ${endY} L ${endX} ${endY}`;
             }
         } else {
@@ -3082,8 +3087,9 @@ function drawPdfTileLines(tile, matrix, mode) {
         });
     };
 
-    drawGroups(groupsPower, SCHEMATIC_TOKENS.power, 0, mode === 'power', powerDirection, 'power');
-    if (mode === 'topology') drawGroups(groupsData, SCHEMATIC_TOKENS.data, 0, false, dataDirection, 'data');
+    const tileLane = mode === 'topology' ? 3 : 0;
+    drawGroups(groupsPower, SCHEMATIC_TOKENS.power, -tileLane, mode === 'power', powerDirection, 'power');
+    if (mode === 'topology') drawGroups(groupsData, SCHEMATIC_TOKENS.data, tileLane, false, dataDirection, 'data');
 }
 
 function preparePdfDetailPages() {
@@ -3226,9 +3232,13 @@ function fitA4Pages() {
         : referencePage
         ? referencePage.clientWidth - parseFloat(referenceStyle.paddingLeft || 0) - parseFloat(referenceStyle.paddingRight || 0)
         : 595;
-    const pageHeight = 892;
+    const pageHeight = referencePage
+        ? referencePage.clientHeight - parseFloat(referenceStyle.paddingTop || 0) - parseFloat(referenceStyle.paddingBottom || 0)
+        : 892;
     const padX = 0;
     const titleReserve = 70;
+    const summaryGap = 8;
+    const footerSafety = 18;
 
     function fitContainer(el, maxW, maxH) {
         if (!el) return null;
@@ -3249,25 +3259,49 @@ function fitA4Pages() {
         return { width: sw * scale, height: sh * scale, scale };
     }
 
+    function prepareSummaryBelowGraphic(page, cabling, summary) {
+        if (page) page.style.justifyContent = 'flex-start';
+        if (cabling) {
+            cabling.style.flex = '0 0 auto';
+            cabling.style.order = '3';
+            cabling.style.marginBottom = '0px';
+        }
+        if (summary) {
+            summary.style.flex = '0 0 auto';
+            summary.style.order = '4';
+            summary.style.marginTop = summaryGap + 'px';
+            summary.style.marginBottom = '0px';
+            summary.style.alignSelf = 'stretch';
+        }
+    }
+
     const page1 = document.getElementById('a4page1');
     if (page1) {
         const stats = page1.querySelector('.stats-grid');
         const cabling = page1.querySelector('.a4-cabling');
+        prepareSummaryBelowGraphic(page1, cabling, stats);
         const statsHeight = stats ? stats.offsetHeight : 0;
         const cablingContent = cabling ? cabling.firstElementChild : null;
-        const fit = fitContainer(cablingContent, pageWidth - padX, Math.max(120, pageHeight - titleReserve - statsHeight - 48));
-        if (cabling && fit) cabling.style.height = Math.ceil(fit.height) + 'px';
+        const fit = fitContainer(cablingContent, pageWidth - padX, Math.max(120, pageHeight - titleReserve - statsHeight - summaryGap - footerSafety));
+        if (cabling && fit) {
+            cabling.style.flex = '0 0 auto';
+            cabling.style.height = Math.ceil(fit.height) + 'px';
+        }
     }
 
     const page2 = document.getElementById('a4page2');
     if (page2) {
         const infoStrip = page2.querySelector('.summary-strip');
         const cabling = page2.querySelector('.a4-cabling');
+        prepareSummaryBelowGraphic(page2, cabling, infoStrip);
         const cablingContent = cabling ? cabling.firstElementChild : null;
         const infoHeight = infoStrip ? infoStrip.offsetHeight : 0;
-        const availableHeight = pageHeight - titleReserve - infoHeight - 34;
+        const availableHeight = pageHeight - titleReserve - infoHeight - summaryGap - footerSafety;
         const fit = fitContainer(cablingContent, pageWidth - padX, availableHeight);
-        if (cabling && fit) cabling.style.height = Math.ceil(fit.height) + 'px';
+        if (cabling && fit) {
+            cabling.style.flex = '0 0 auto';
+            cabling.style.height = Math.ceil(fit.height) + 'px';
+        }
     }
 
     document.querySelectorAll('.pdf-detail-page').forEach(function(page) {
@@ -3283,8 +3317,9 @@ function fitA4Pages() {
     document.querySelectorAll('#processorCanvases .a4-page').forEach(function(page) {
         const infoStrip = page.querySelector('.summary-strip');
         const card = page.querySelector('.canvas-card');
+        prepareSummaryBelowGraphic(page, card, infoStrip);
         const infoHeight = infoStrip ? infoStrip.offsetHeight : 0;
-        fitContainer(card, pageWidth - padX, pageHeight - titleReserve - infoHeight - 34);
+        fitContainer(card, pageWidth - padX, pageHeight - titleReserve - infoHeight - summaryGap - footerSafety);
     });
 }
 
@@ -3379,7 +3414,7 @@ function pdfGetMatrixLayout(matrix, x, y, w, h, verticalAlign = 'center') {
     const ratioSum = rowRatios.reduce((sum, value) => sum + value, 0);
     const baseNoGap = Math.min(w / Math.max(1, cols), h / Math.max(0.1, ratioSum));
     const gap = Math.max(1.0, Math.min(2.8, baseNoGap * 0.16));
-    const cellW = Math.min(
+    const cellW = Math.min(22,
         (w - gap * Math.max(0, cols - 1)) / Math.max(1, cols),
         (h - gap * Math.max(0, rows - 1)) / Math.max(0.1, ratioSum)
     );
@@ -3530,7 +3565,7 @@ function pdfDrawTopologyLegend(pdf, PW, PH) {
 }
 
 function pdfPathPoints(p1, p2, laneOffset, direction) {
-    const edgeDepth = 0.12;
+    const edgeDepth = 0.18;
     const verticalMainInset = 0.28;
     const horizontalMainInset = 0.18;
     const sideInset = 0.18;
@@ -3544,9 +3579,9 @@ function pdfPathPoints(p1, p2, laneOffset, direction) {
             const right = p2.c > p1.c;
             const startX = right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
             const endX = right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
-            const seamX = right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
-            const startY = p1.y + laneOffset;
-            const endY = p2.y + laneOffset;
+            const seamX = (right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right)) + laneOffset;
+            const startY = p1.y;
+            const endY = p2.y;
             return p1.r === p2.r ? [[startX, startY], [seamX, startY], [endX, startY]] : [[startX, startY], [seamX, startY], [seamX, endY], [endX, endY]];
         }
     } else {
@@ -3568,7 +3603,7 @@ function pdfPathPoints(p1, p2, laneOffset, direction) {
 }
 
 function pdfPowerPathPoints(p1, p2, laneOffset, direction) {
-    const edgeDepth = 0.12;
+    const edgeDepth = 0.18;
     const mid = (a, b) => (a + b) / 2;
     const verticalMainInset = 0.18;
     const horizontalMainInset = 0.18;
@@ -3584,9 +3619,9 @@ function pdfPowerPathPoints(p1, p2, laneOffset, direction) {
             const right = p2.c > p1.c;
             const startX = right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
             const endX = right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
-            const seamX = right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
-            const startY = p1.y + laneOffset;
-            const endY = p2.y + laneOffset;
+            const seamX = (right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right)) + laneOffset;
+            const startY = p1.y;
+            const endY = p2.y;
             return p1.r === p2.r
                 ? [[startX, startY], [seamX, startY], [endX, startY]]
                 : [[startX, startY], [seamX, startY], [seamX, endY], [endX, endY]];
@@ -3748,7 +3783,7 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
             if (mode === 'topology') {
                 const dataMatch = cell.portLabel.match(/D(\d+)-(\d+)/);
                 if (dataMatch) {
-                    const id = `D${dataMatch[1]}`;
+                    const id = `M${cell.controllerId || 1}-D${dataMatch[1]}`;
                     if (!groupsData[id]) groupsData[id] = [];
                     groupsData[id].push({ seq: parseInt(dataMatch[2], 10), x: dataDirection === 'vertical' ? box.left + box.width * .74 : cx, y: dataDirection === 'vertical' ? cy : box.top + box.height * .78, r, c, box });
                 }
@@ -3772,17 +3807,18 @@ function pdfDrawVectorMap(pdf, mode, pageTitle, includeStats, PW, PH) {
             }
         });
     };
-    drawGroups(groupsPower, SCHEMATIC_TOKENS.power, 0, mode === 'power', true, powerDirection, 'power');
-    if (mode === 'topology') drawGroups(groupsData, SCHEMATIC_TOKENS.data, 0, false, true, dataDirection, 'data');
+    const routeLane = Math.max(.28, Math.min(1.1, layout.gap * .24));
+    drawGroups(groupsPower, SCHEMATIC_TOKENS.power, mode === 'topology' ? -routeLane : 0, mode === 'power', true, powerDirection, 'power');
+    if (mode === 'topology') drawGroups(groupsData, SCHEMATIC_TOKENS.data, routeLane, false, true, dataDirection, 'data');
 
     labels.forEach(({ cell, x, y, box }) => {
         if (mode === 'power') {
-            const font = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.powerLabel, box, 5, 0.32);
+            const font = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.powerLabel, box, 4.6, 0.24);
             pdfDrawBadgeText(pdf, cell.powerLabel, x, y + font * 0.02, font, '#111827', 'bold');
         } else {
             const gap = Math.max(1.25, box.height * 0.14);
-            const powerFont = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.powerLabel, box, 4.4, 0.2);
-            const portFont = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.portLabel, box, 4.4, 0.2);
+            const powerFont = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.powerLabel, box, 4, 0.18);
+            const portFont = pdfAdaptiveLabelFont(pdf, lastMatrix, cell.portLabel, box, 4, 0.18);
             pdfDrawBadgeText(pdf, cell.powerLabel, x, y - gap, powerFont, '#111827', 'bold');
             pdfDrawBadgeText(pdf, cell.portLabel, x, y + gap, portFont, '#111827', 'bold');
         }

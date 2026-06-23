@@ -734,6 +734,10 @@ function setPage(page) {
     renderPageActions();
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+    requestAnimationFrame(() => {
+        if (page === "power") $("powerPreviewMini")?._fitPreview?.();
+        if (page === "processing") $("networkPreviewMini")?._fitPreview?.();
+    });
     if (page === "summary") cloneWiringPages();
 }
 function renderSteps() {
@@ -1156,7 +1160,7 @@ function dataBorderColor(surface = "light") {
 }
 function powerStroke(run = 1) { return powerMappingTone(`P${run}`).line; }
 function routedWirePath(p1, p2, direction, laneOffset = 0, mainInset = 0.28) {
-    const edgeDepth = 0.12;
+    const edgeDepth = 0.18;
     const mid = (a, b) => (a + b) / 2;
     const isVert = direction === "vertical";
     if (isVert) {
@@ -1170,9 +1174,9 @@ function routedWirePath(p1, p2, direction, laneOffset = 0, mainInset = 0.28) {
             const right = p2.c > p1.c;
             const startX = right ? p1.box.right - p1.box.width * edgeDepth : p1.box.left + p1.box.width * edgeDepth;
             const endX = right ? p2.box.left + p2.box.width * edgeDepth : p2.box.right - p2.box.width * edgeDepth;
-            const seamX = right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right);
-            const startY = p1.y + laneOffset;
-            const endY = p2.y + laneOffset;
+            const seamX = (right ? mid(p1.box.right, p2.box.left) : mid(p1.box.left, p2.box.right)) + laneOffset;
+            const startY = p1.y;
+            const endY = p2.y;
             return p1.r === p2.r
                 ? `M ${startX} ${startY} L ${seamX} ${startY} L ${endX} ${startY}`
                 : `M ${startX} ${startY} L ${seamX} ${startY} L ${seamX} ${endY} L ${endX} ${endY}`;
@@ -1229,7 +1233,8 @@ function renderWireSvg(matrix, mode, cellW, rowHeights, gap) {
             const a = points[i - 1], b = points[i];
             const p1 = wirePoint(a, cellW, rowHeights, gap, mode, direction, lane);
             const p2 = wirePoint(b, cellW, rowHeights, gap, mode, direction, lane);
-            const d = routedWirePath(p1, p2, direction, 0, mode === "power" ? 0.18 : 0.28);
+            const routeLane = Math.min(gap * .28, Math.max(.7, lane * .16));
+            const d = routedWirePath(p1, p2, direction, mode === "power" ? -routeLane : routeLane, mode === "power" ? 0.18 : 0.28);
             const jumper = direction === "horizontal" ? a.r !== b.r : a.c !== b.c;
             const stroke = color;
             paths.push(`<path d="${d}" stroke="${stroke}" stroke-width="${jumper ? 1.9 : mode === "power" ? 1.75 : 1.55}" fill="none" stroke-linecap="square" stroke-linejoin="miter" opacity=".96"${jumper ? ` stroke-dasharray="5 4"` : ""} marker-end="url(#${markerId})"/>`);
@@ -1254,7 +1259,8 @@ function renderBoard(targetId, mode) {
         const displayH = matrixRows?.[r]?.[0]?.displayH;
         return Math.max(.125, displayH ? displayH / unitDisplayW : (r === rows - 1 && cfg.halfRow ? fallbackRatio / 2 : fallbackRatio));
     });
-    const cellW = Math.max(16, Math.min(42, Math.floor(720 / Math.max(1, cols))));
+    const densityCap = cols <= 4 && rows <= 4 ? 34 : cols <= 7 && rows <= 7 ? 38 : 42;
+    const cellW = Math.max(16, Math.min(densityCap, Math.floor(720 / Math.max(1, cols))));
     const rowHeights = rowRatios.map(ratio => Math.max(4, Math.round(cellW * ratio)));
     const gap = cols > 24 ? 4 : 8;
     const displayMatrix = matrixRows || Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => ({ r, c })));
@@ -1279,7 +1285,11 @@ function renderBoard(targetId, mode) {
                 : "";
             const cellH = rowHeights[r] || cellW;
             const dataRule = "";
-            html += `<div class="cab ${klass}" style="width:${cellW}px;height:${cellH}px;font-size:${Math.max(7, Math.min(10, cellW * .24, cellH * .32))}px;${colorStyle}${dataRule}">${escapeHtml(label || (fallbackStart ? (mode === "power" ? `P${fallbackLinear + 1}` : `D${fallbackLinear + 1}`) : ""))}</div>`;
+            const renderedLabel = label || (fallbackStart ? (mode === "power" ? `P${fallbackLinear + 1}` : `D${fallbackLinear + 1}`) : "");
+            const labelWidthLimit = (cellW * .72) / Math.max(1, String(renderedLabel).length * .58);
+            const labelHeightLimit = cellH * .24;
+            const labelSize = Math.max(3.2, Math.min(9, labelWidthLimit, labelHeightLimit));
+            html += `<div class="cab ${klass}" style="width:${cellW}px;height:${cellH}px;font-size:${labelSize.toFixed(2)}px;${colorStyle}${dataRule}">${escapeHtml(renderedLabel)}</div>`;
         }
     }
     html += "</div></div>";
@@ -1321,14 +1331,42 @@ function renderBoardThumbnail(sourceId, targetId) {
         });
         target.innerHTML = "";
         target.appendChild(clone);
-        clone.style.transform = "none";
-        const naturalW = Math.max(1, clone.scrollWidth);
-        const naturalH = Math.max(1, clone.scrollHeight);
-        const scale = Math.min((target.clientWidth - 16) / naturalW, (target.clientHeight - 16) / naturalH, .42);
-        clone.style.transform = `scale(${Math.max(.08, scale)})`;
-        clone.style.position = "absolute";
-        clone.style.left = "8px";
-        clone.style.top = "8px";
+        const fitClone = () => {
+            if (target.clientWidth < 48 || target.clientHeight < 48 || !target.contains(clone)) return;
+            clone.style.transform = "none";
+            clone.style.position = "absolute";
+            const naturalW = Math.max(1, clone.scrollWidth);
+            const naturalH = Math.max(1, clone.scrollHeight);
+            const scale = Math.min((target.clientWidth - 24) / naturalW, (target.clientHeight - 24) / naturalH, 1.15);
+            const fittedScale = Math.max(.08, scale);
+            const fittedW = naturalW * fittedScale;
+            const fittedH = naturalH * fittedScale;
+            clone.style.transform = `scale(${fittedScale})`;
+            clone.style.left = `${Math.max(12, (target.clientWidth - fittedW) / 2)}px`;
+            clone.style.top = `${Math.max(12, (target.clientHeight - fittedH) / 2)}px`;
+        };
+        target._fitPreview = fitClone;
+        if (!target._previewResizeObserver && typeof ResizeObserver !== "undefined") {
+            target._previewResizeObserver = new ResizeObserver(() => target._fitPreview?.());
+            target._previewResizeObserver.observe(target);
+        }
+        fitClone();
+        target.setAttribute("role", "button");
+        target.setAttribute("tabindex", "0");
+        target.setAttribute("aria-label", `View ${sourceId === "powerBoard" ? "power" : "network"} wiring diagram`);
+        target.title = "Click to view the full wiring diagram";
+        if (!target.dataset.previewBound) {
+            const focusSource = () => {
+                source.scrollIntoView({ behavior: "smooth", block: "center" });
+                source.classList.add("preview-focus");
+                window.setTimeout(() => source.classList.remove("preview-focus"), 900);
+            };
+            target.addEventListener("click", focusSource);
+            target.addEventListener("keydown", event => {
+                if (event.key === "Enter" || event.key === " ") { event.preventDefault(); focusSource(); }
+            });
+            target.dataset.previewBound = "1";
+        }
     });
 }
 function renderPowerPage() {
@@ -1573,7 +1611,9 @@ function renderQuote() {
     $("docModel").textContent = state.model;
     $("docSystem").textContent = `${$("systemSelect").value} ${compact(selectedProcessorRow()?.[F.model]) || "Processor"} / ${$("bandwidthSelect").value}`;
 	
+
     renderQuotePageClones();
+    renderProductDocumentPages();
 	    
     document.querySelectorAll("[data-editable]").forEach(wrapper => {
         const display = wrapper.querySelector(".editable-display");
@@ -1894,6 +1934,31 @@ function cloneWiringPages() {
         frame.contentWindow?.fitA4Pages?.();
     }, 0);
 }
+function matchProductDocumentRule(rules, model = state.model) {
+    const value = compact(model).toUpperCase();
+    if (!value) return null;
+    return (rules || []).find(rule =>
+        (rule.models || []).some(item => compact(item).toUpperCase() === value) ||
+        (rule.prefixes || []).some(prefix => value.startsWith(compact(prefix).toUpperCase()))
+    ) || null;
+}
+function selectedProductDocuments() {
+    const rules = window.PRODUCT_DOCUMENT_RULES || {};
+    const brochure = matchProductDocumentRule(rules.brochure);
+    const simplifiedDrawing = matchProductDocumentRule(rules.simplifiedDrawing);
+    return [
+        simplifiedDrawing && { title: "Product simplified drawing", file: simplifiedDrawing.file, kind: "drawing" },
+        brochure && { title: "Product specifications", file: brochure.file, kind: "brochure" }
+    ].filter(Boolean);
+}
+function renderProductDocumentPages() {
+    const target = $("productDocPages");
+    if (!target) return;
+    target.innerHTML = selectedProductDocuments().map(document => `<article class="product-doc-page product-doc-${document.kind}">
+        <header class="product-doc-head"><strong>${escapeHtml(document.title)}</strong><span>${escapeHtml(state.model)}</span></header>
+        <figure class="product-doc-figure"><img src="${escapeHtml(document.file)}" alt="${escapeHtml(`${state.model} ${document.title}`)}"></figure>
+    </article>`).join("");
+}
 function quoteExportRows() {
     const rows = [];
     const items = computeItems();
@@ -1947,6 +2012,39 @@ function loadPdfImage(src) {
         image.onerror = reject;
         image.src = src;
     });
+}
+async function appendProductDocumentPdfPages(pdf, headerImage) {
+    for (const document of selectedProductDocuments()) {
+        const image = await loadPdfImage(document.file).catch(() => null);
+        if (!image) continue;
+        pdf.addPage("a4", "portrait");
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, 0, 210, 297, "F");
+        if (headerImage) pdf.addImage(headerImage, "PNG", 0, 0, 210, 297);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(15);
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(document.title, 24.5, 35);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(7.2);
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(state.model || "-", 182, 35, { align: "right" });
+        pdf.setDrawColor(176, 0, 22);
+        pdf.setLineWidth(.45);
+        pdf.line(24.5, 40, 182, 40);
+        const maxWidth = 176;
+        const maxHeight = 220;
+        const ratio = Math.min(maxWidth / image.naturalWidth, maxHeight / image.naturalHeight);
+        const width = image.naturalWidth * ratio;
+        const height = image.naturalHeight * ratio;
+        const x = (210 - width) / 2;
+        const y = 45 + (maxHeight - height) / 2;
+        pdf.setDrawColor(216, 224, 235);
+        pdf.setLineWidth(.2);
+        pdf.rect(x - 1, y - 1, width + 2, height + 2);
+        const format = document.file.toLowerCase().endsWith(".png") ? "PNG" : "JPEG";
+        pdf.addImage(image, format, x, y, width, height, undefined, "FAST");
+    }
 }
 async function waitForMappingPdfRuntime(timeoutMs = 6000) {
     const frame = $("mappingFrame");
@@ -2130,6 +2228,7 @@ async function buildQuotePdf() {
     pdf.setTextColor(17, 24, 39);
     pdf.text(state.showPrice ? `Total  $${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "Total  Hidden", pageWidth - 15, y + 5, { align: "right" });
     if (state.showTopology) await mappingWindow.appendMappingPdfPages(pdf, { reuseCurrentPage: false });
+    await appendProductDocumentPdfPages(pdf, headerImage);
     const totalPages = pdf.getNumberOfPages();
     for (let pageNo = 1; pageNo <= totalPages; pageNo++) {
         pdf.setPage(pageNo);

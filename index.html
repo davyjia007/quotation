@@ -664,7 +664,7 @@ textarea { min-height: 74px; resize: vertical; }
 .wiring-map {
     position: relative;
     width: max-content;
-    min-width: min(100%, 620px);
+    min-width: 0;
     margin: 44px auto 18px;
     padding: 16px;
 }
@@ -1040,6 +1040,49 @@ body.show-wiring #wiringPages {
     display: block;
     overflow: hidden;
     margin-top: 18px;
+}
+.product-doc-pages {
+    display: grid;
+    gap: 18px;
+    margin-top: 18px;
+}
+.product-doc-page {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 210mm;
+    max-width: 100%;
+    min-height: 297mm;
+    padding: 24mm 18mm 22mm;
+    background: #fff;
+    border: 1px solid #d8e0eb;
+    box-shadow: 0 18px 50px rgba(15,23,42,.16);
+    color: #111827;
+}
+.product-doc-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--red);
+}
+.product-doc-head strong { font-size: 18px; }
+.product-doc-head span { color: #64748b; font-size: 10px; font-weight: 700; }
+.product-doc-figure {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    margin: 0;
+    padding-top: 12px;
+}
+.product-doc-figure img {
+    display: block;
+    max-width: 100%;
+    max-height: 238mm;
+    object-fit: contain;
 }
 #wiringPages .a4-page {
     box-sizing: border-box;
@@ -1435,6 +1478,15 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
     #wiringPages .wiring-appendix { padding: 30mm 28mm 30mm 24.5mm; box-shadow: none; }
     #wiringPages .wiring-appendix header { padding-top: 0; }
     #wiringPages .letterhead-footer { display: none !important; }
+    .product-doc-pages { display: block !important; margin: 0; }
+    .product-doc-page {
+        width: 210mm;
+        max-width: none;
+        min-height: 297mm;
+        break-before: page;
+        page-break-before: always;
+        box-shadow: none;
+    }
     .qty-input, .price-input {
         border: 0;
         padding: 0;
@@ -1503,9 +1555,12 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
 .large-summary-grid div { min-width:0; }
 .large-summary-grid span { display:block; color:#667085; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .large-summary-grid strong { display:block; margin-top:4px; color:#101828; font-size:13px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mini-preview { height:210px; overflow:hidden; border:1px solid #e1e5ea; background:#f8fafc; position:relative; }
+.mini-preview { height:210px; overflow:hidden; border:1px solid #e1e5ea; background:#f8fafc; position:relative; cursor:zoom-in; transition:border-color .18s ease,box-shadow .18s ease,background .18s ease; }
+.mini-preview::after { content:"Click to view"; position:absolute; right:10px; bottom:8px; padding:4px 7px; border:1px solid #d0d5dd; background:rgba(255,255,255,.92); color:#667085; font-size:9px; font-weight:700; pointer-events:none; }
+.mini-preview:hover,.mini-preview:focus-visible { outline:0; border-color:#e31b23; background:#fff; box-shadow:0 0 0 3px rgba(227,27,35,.08); }
 .mini-preview .wiring-map { margin:0; transform-origin:top left; pointer-events:none; }
 .mini-preview .run-label,.mini-preview .legend { display:none; }
+.wiring-board.preview-focus { border-color:#e31b23; box-shadow:0 0 0 4px rgba(227,27,35,.1); transition:border-color .18s ease,box-shadow .18s ease; }
 @media (max-width:900px) {
     .concept-page { grid-template-columns:1fr; }
     .concept-sidebar { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -1796,6 +1851,7 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
                 </footer>
             </article>
             <section id="wiringPages"></section>
+            <section class="product-doc-pages" id="productDocPages" aria-label="Product documents"></section>
         </div>
     </section>
 
@@ -1805,7 +1861,7 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
     </div>
 
     <div class="hidden-map">
-        <iframe id="mappingFrame" src="mapping.html"></iframe>
+        <iframe id="mappingFrame" src="mapping.html?v=20260623-layout-safe-2"></iframe>
     </div>
 
     <!-- Print-only fixed header & footer (visible on every printed page) -->
@@ -1820,6 +1876,7 @@ input:focus,select:focus,textarea:focus { outline:3px solid rgba(227,25,43,.12);
     <img class="print-letterhead-page" src="images/roe-letterhead-a4.png" alt="" style="display:none">
 </div>
 
+<script src="product-docs/product-docs.js"></script>
 <script src="quotation-script.js"></script>
 </body>
 </html>
