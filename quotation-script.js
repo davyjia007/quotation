@@ -7,6 +7,7 @@
     system: "System",
     bandwidth: "Bandwidth",
     materialName: "Part Name",
+    partNameEn: "Part Name EN",
     sap: "SAP",
     desc: "Chinese Description",
     remark: "Note",
@@ -103,6 +104,7 @@ function deriveFields(rows) {
         system: byName("System", "系统"),
         bandwidth: byName("Bandwidth", "带宽"),
         materialName: byName("Part Name", "物料名称"),
+        partNameEn: byName("Part Name EN"),
         sap: byName("SAP"),
         desc: byName("Chinese Description", "物料描述"),
         remark: byName("Note", "备注"),
@@ -147,8 +149,25 @@ function englishName(row, fallback) {
     if (name.includes("processor") || name.includes("主控")) return `${row?.[F.productName] || ""} Processor`.trim();
     return cleanEnglish(row?.[F.materialName]) || fallback || "Item";
 }
+function quotePartName(row, fallback) {
+    return cleanEnglish(row?.[F.partNameEn]) || englishName(row, fallback);
+}
 function englishDescription(row, fallback) {
     return cleanEnglish(row?.[F.englishDesc]) || cleanEnglish(row?.[F.desc]) || fallback || "";
+}
+function chineseDescription(row, fallback) {
+    return compact(row?.[F.desc]) || compact(fallback) || "";
+}
+function sourceNote(row, fallback = "") {
+    return compact(row?.[F.remark]) || compact(fallback);
+}
+function quoteText(row, fallbackTitle, fallbackDescription, fallbackChineseDescription = "") {
+    return {
+        title: quotePartName(row, fallbackTitle),
+        desc: englishDescription(row, fallbackDescription),
+        chineseDesc: chineseDescription(row, fallbackChineseDescription || fallbackDescription),
+        note: sourceNote(row)
+    };
 }
 function isCoreFreeSpare(row) {
     const name = `${row?.[F.materialName] || ""} ${row?.[F.englishDesc] || ""}`.toLowerCase();
@@ -594,8 +613,8 @@ function addProductionItems(map) {
         const capacity = Math.max(1, spareRatio(row));
         if (!panelQty) continue;
         addItem(map, {
-            section: "Packing", title: englishName(row, "Panel packing"),
-            desc: englishDescription(row, `${capacity} ${rowSize.toLowerCase()} panels per package`),
+            section: "Packing",
+            ...quoteText(row, "Panel packing", `${capacity} ${rowSize.toLowerCase()} panels per package`),
             qty: Math.ceil(panelQty / capacity), unit: "pcs", sort: 25,
             key: `packing|${row[F.sap] || row[F.materialName]}|${rowSize}`,
             price: row[F.price], sap: row[F.sap] || ""
@@ -612,7 +631,9 @@ function addProductionItems(map) {
     [[twoW, twoWQty], [oneW, oneWQty]].forEach(([row, qty]) => {
         if (!row || !qty) return;
         addItem(map, {
-            section: "Accessories", title: accessoryTitle(row), desc: englishDescription(row), qty,
+            section: "Accessories",
+            ...quoteText(row, accessoryTitle(row), englishDescription(row)),
+            qty,
             unit: "pcs", sort: installation === "Hanging" ? 22 : 23,
             key: `accessory|${installation}|${row[F.sap] || row[F.materialName]}`,
             price: row[F.price], sap: row[F.sap] || ""
@@ -631,7 +652,9 @@ function addProductionItems(map) {
             qty = supportColumns * Math.ceil(size.heightM);
         }
         addItem(map, {
-            section: "Accessories", title: accessoryTitle(row), desc: englishDescription(row), qty,
+            section: "Accessories",
+            ...quoteText(row, accessoryTitle(row), englishDescription(row)),
+            qty,
             unit: "pcs", sort: text.includes("base truss") ? 24 : text.includes("rear truss") ? 25 : 26,
             key: `accessory|Stacking|${row[F.sap] || row[F.materialName]}`,
             price: row[F.price], sap: row[F.sap] || ""
@@ -644,10 +667,10 @@ function computeItems() {
         const spec = size === "Custom" ? getScreenSpec("Full") : getScreenSpec(size);
         const dim = size === "Custom" ? cabinetSize("Full") : cabinetSize(size);
         const pixelH = size === "Half" && !availableSizes().has("Half") ? Math.floor((spec.pixelH || 0) / 2) : spec.pixelH;
+        const fallbackDesc = [categoryInfo().label, dimensionLabel(dim), spec.pixelW && pixelH ? `${spec.pixelW} x ${pixelH}px per cabinet` : "", `${$("systemSelect").value} control system`].filter(Boolean).join(", ");
         addItem(map, {
             section: "LED Screen",
-            title: `${state.model} ${size} LED Cabinet`,
-            desc: [categoryInfo().label, dimensionLabel(dim), spec.pixelW && pixelH ? `${spec.pixelW} x ${pixelH}px per cabinet` : "", `${$("systemSelect").value} control system`].filter(Boolean).join(", "),
+            ...quoteText(spec.row, `${state.model} ${size} LED Cabinet`, fallbackDesc),
             qty,
             unit: "pcs",
             sort: 10,
@@ -662,8 +685,7 @@ function computeItems() {
     const processorModel = compact(mainProcessor?.[F.model]) || `${$("systemSelect").value} Processor`;
     addItem(map, {
         section: "Processor",
-        title: processorModel,
-        desc: englishDescription(mainProcessor, `${$("systemSelect").value} ${$("bandwidthSelect").value}, ${$("bitRateSelect").selectedOptions[0]?.textContent || ""}, ${processorCanvasKey(mainProcessor)} processor`),
+        ...quoteText(mainProcessor, processorModel, `${$("systemSelect").value} ${$("bandwidthSelect").value}, ${$("bitRateSelect").selectedOptions[0]?.textContent || ""}, ${processorCanvasKey(mainProcessor)} processor`),
         qty: processors,
         unit: "pcs",
         sort: 20,
@@ -675,8 +697,7 @@ function computeItems() {
     const fiberQty = fiberBoxQuantity();
     if (fiberRow && fiberQty) addItem(map, {
         section: "Processor",
-        title: `${compact(fiberRow[F.model])} Fiber Box`,
-        desc: englishDescription(fiberRow, `${$("bandwidthSelect").value} fiber distribution, ${ratioCapacity(fiberRow)} ports per box`),
+        ...quoteText(fiberRow, `${compact(fiberRow[F.model])} Fiber Box`, `${$("bandwidthSelect").value} fiber distribution, ${ratioCapacity(fiberRow)} ports per box`),
         qty: fiberQty,
         unit: "pcs",
         sort: 21,
@@ -694,8 +715,7 @@ function computeItems() {
         const row = pattern ? selectedCableRow(pattern) : null;
         addItem(map, {
             section: "Cables",
-            title,
-            desc: englishDescription(row, desc),
+            ...quoteText(row, title, desc),
             qty: getStatNumber(statKey, 0),
             unit: "pcs",
             sort,
@@ -714,8 +734,7 @@ function computeItems() {
         if (qty <= 0) return;
         addItem(map, {
             section: free ? "Spare Parts for Free" : "Spare Parts for Charged",
-            title: englishName(row, free ? "Free Spare Part" : "Charged Spare Part"),
-            desc: englishDescription(row, cleanEnglish(row[F.desc]) || "Spare part"),
+            ...quoteText(row, free ? "Free Spare Part" : "Charged Spare Part", cleanEnglish(row[F.desc]) || "Spare part"),
             qty,
             unit: "pcs",
             sort: free ? 50 : 60,
@@ -1485,6 +1504,21 @@ function renderQuoteSummary() {
         ["Display Resolution:", res.w && res.h ? `W ${res.w} px x H ${res.h} px` : "TBD"]
     ].map(row => `<div class="quote-summary-row"><div>${row[0]}</div><div><strong>${row[1]}</strong></div></div>`).join("");
 }
+function setQuotePageNumbers(pages) {
+    const pageList = (pages?.length ? pages : [document.querySelector(".paper:not(.quote-page-clone)")]).filter(Boolean);
+    const total = Math.max(1, pageList.length);
+    pageList.forEach((page, index) => {
+        const footer = page.querySelector(".letterhead-footer");
+        if (!footer) return;
+        let node = footer.querySelector(".footer-page");
+        if (!node) {
+            node = document.createElement("div");
+            node.className = "footer-page";
+            footer.insertBefore(node, footer.querySelector(".footer-right"));
+        }
+        node.textContent = `Page ${index + 1} / ${total}`;
+    });
+}
 function renderQuotePageClones() {
     const source = document.querySelector(".paper:not(.quote-page-clone)");
     if (!source) return;
@@ -1492,7 +1526,10 @@ function renderQuotePageClones() {
     source.classList.remove("quote-source-hidden");
     const paginate = source.scrollHeight > source.clientHeight + 2;
     document.body.classList.toggle("quote-multipage", paginate);
-    if (!paginate) return;
+    if (!paginate) {
+        setQuotePageNumbers([source]);
+        return;
+    }
     source.classList.add("quote-source-hidden");
     const groups = [];
     let current = null;
@@ -1564,6 +1601,7 @@ function renderQuotePageClones() {
             page.appendChild(total);
         }
     }
+    setQuotePageNumbers(pages);
 }
 function renderQuote() {
     const items = computeItems();
@@ -1973,6 +2011,8 @@ function quoteExportRows() {
             rows.push({
                 product: item.title,
                 description: item.desc,
+                chineseDescription: item.chineseDesc || "",
+                note: item.note || "",
                 sap: item.sap || "",
                 qty,
                 unit: item.unit,
@@ -1984,24 +2024,26 @@ function quoteExportRows() {
     return rows;
 }
 function exportQuoteExcel() {
-    const headers = ["Section/Product", "Description"];
-    if (state.showSap) headers.push("SAP");
-    headers.push("Quantity", "Unit");
-    if (state.showPrice) headers.push("Unit Price", "Extended Price");
-    const body = quoteExportRows().map(row => {
-        if (row.section) return `<tr><td colspan="${headers.length}"><strong>${escapeHtml(row.sectionLabel || sectionDisplayName(row.section))}</strong></td></tr>`;
-        const cells = [row.product, row.description];
-        if (state.showSap) cells.push(row.sap);
-        cells.push(row.qty, row.unit);
-        if (state.showPrice) cells.push(row.unitPrice.toFixed(2), row.extended.toFixed(2));
+    const headers = ["序号", "Part Name", "Chinese Description", "Quantity", "Unit", "Note"];
+    let no = 1;
+    const body = quoteExportRows().filter(row => !row.section).map(row => {
+        const cells = [no++, row.product, row.chineseDescription || row.description, row.qty, row.unit, row.note || ""];
         return `<tr>${cells.map(cell => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`;
     }).join("");
-    const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><table border="1"><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+        table{border-collapse:collapse;font-family:Arial,'Microsoft YaHei',sans-serif;font-size:11pt;}
+        th{background:#1f4e79;color:#fff;font-weight:700;text-align:center;}
+        th,td{border:1px solid #cbd5e1;padding:6px 8px;vertical-align:top;}
+        td:nth-child(1),td:nth-child(4),td:nth-child(5){text-align:center;white-space:nowrap;}
+        td:nth-child(2){min-width:180px;}
+        td:nth-child(3){min-width:460px;}
+        td:nth-child(6){min-width:240px;}
+    </style></head><body><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></body></html>`;
     const blob = new Blob([html], { type: "application/vnd.ms-excel" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${safeModelFile(state.model)}-quotation.xls`;
+    a.download = `${safeModelFile(state.model)}-parts-export.xls`;
     a.click();
     URL.revokeObjectURL(url);
 }
