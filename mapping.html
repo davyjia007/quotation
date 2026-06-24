@@ -269,16 +269,16 @@
         <div class="selector-group">
             <label>Power Wiring Direction</label>
             <select id="powerRouteDirectionSelect">
-                <option value="vertical" selected>Top to Bottom</option>
-                <option value="horizontal">Left to Right</option>
+                <option value="vertical" selected>Vertical</option>
+                <option value="horizontal">Horizontal</option>
             </select>
         </div>
 
         <div class="selector-group">
             <label>Data Wiring Direction</label>
             <select id="routeDirectionSelect">
-                <option value="vertical" selected>Top to Bottom</option>
-                <option value="horizontal">Left to Right</option>
+                <option value="vertical" selected>Vertical</option>
+                <option value="horizontal">Horizontal</option>
             </select>
         </div>
 
@@ -505,7 +505,8 @@ function getPowerSpecLabel() {
 }
 
 function getSignalSpecLabel() {
-    return (document.getElementById('bitRateSelect')?.value || '').toString().toUpperCase();
+    const select = document.getElementById('bitRateSelect');
+    return (select?.selectedOptions?.[0]?.textContent || select?.value || '').toString();
 }
 
 function getActualMainPowerLoad() {
@@ -934,14 +935,12 @@ function updateBitRateOptions() {
     const rateSel = document.getElementById('bitRateSelect');
     const record = processorData.find(p => p["主控"] === _currentSystem && p["网口"] === _currentBandwidth);
     rateSel.innerHTML = '';
-    let availableRates = [];
+    let availableRates = ["10b60Hz", "10b50Hz", "12b60Hz", "12b50Hz", "8b60Hz", "8b120Hz", "10b120Hz"];
     if (record) {
         availableRates = Object.keys(record).filter(k => k.includes('b') && record[k]);
-    } else {
-        availableRates = ["8b60Hz","10b60Hz","12b60Hz"];
     }
     if (availableRates.length === 0) availableRates = ["10b60Hz"];
-    availableRates.forEach(r => rateSel.add(new Option(r.toUpperCase(), r)));
+    availableRates.forEach(r => rateSel.add(new Option(r, r)));
     if (availableRates.includes('10b60Hz')) rateSel.value = '10b60Hz';
     else rateSel.selectedIndex = 0;
 }

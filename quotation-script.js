@@ -39,6 +39,14 @@ const pages = [
 ];
 const validSystems = ["Brompton", "MVR", "Nova", "Colorlight", "Other System"];
 const sectionOrder = ["LED Screen", "Accessories", "Packing", "Processor", "Cables", "Spare Parts for Charged", "Spare Parts for Free"];
+const BIT_RATE_CAPACITY_DATA = [
+    { system: "Brompton", bandwidth: "1G", rates: { "8b24Hz": 1312500, "8b30Hz": 1050000, "8b48Hz": 656250, "8b50Hz": 630000, "8b60Hz": 525000, "8b120Hz": 262500, "8b144Hz": 218750, "8b240Hz": 131250, "10b24Hz": 1050000, "10b30Hz": 840000, "10b48Hz": 525000, "10b50Hz": 504000, "10b60Hz": 420000, "10b120Hz": 210000, "10b144Hz": 175000, "10b240Hz": 105000, "12b24Hz": 875000, "12b30Hz": 700000, "12b48Hz": 437500, "12b50Hz": 420000, "12b60Hz": 350000, "12b120Hz": 175000, "12b144Hz": 145833, "12b240Hz": 87500 } },
+    { system: "MVR", bandwidth: "1G", rates: { "10b24Hz": 1275000, "10b30Hz": 1020000, "10b48Hz": 635000, "10b50Hz": 610000, "10b60Hz": 510000, "10b120Hz": 240000, "10b144Hz": 195000, "10b240Hz": 100000, "12b24Hz": 1062500, "12b30Hz": 850000, "12b48Hz": 531000, "12b50Hz": 510000, "12b60Hz": 425000, "12b120Hz": 200000, "12b144Hz": 160000, "12b240Hz": 90000 } },
+    { system: "MVR", bandwidth: "2.5G", rates: { "10b24Hz": 3187500, "10b30Hz": 2550000, "10b48Hz": 1587500, "10b50Hz": 1525000, "10b60Hz": 1275000, "10b120Hz": 600000, "10b144Hz": 487500, "10b240Hz": 250000, "12b24Hz": 2656250, "12b30Hz": 2125000, "12b48Hz": 1328125, "12b50Hz": 1275000, "12b60Hz": 1062000, "12b120Hz": 500000, "12b144Hz": 400000, "12b240Hz": 225000 } },
+    { system: "Nova", bandwidth: "1G", rates: { "8b24Hz": 1625000, "8b30Hz": 1300000, "8b48Hz": 812500, "8b50Hz": 780000, "8b60Hz": 650000, "8b120Hz": 325000, "8b144Hz": 270833, "8b240Hz": 162500, "10b24Hz": 1200000, "10b30Hz": 960000, "10b48Hz": 600000, "10b50Hz": 576000, "10b60Hz": 480000, "10b120Hz": 240000, "10b144Hz": 200000, "10b240Hz": 120000, "12b24Hz": 812500, "12b30Hz": 650000, "12b48Hz": 406250, "12b50Hz": 390000, "12b60Hz": 325000, "12b120Hz": 162500, "12b144Hz": 135416, "12b240Hz": 81250 } },
+    { system: "Nova", bandwidth: "5G", rates: { "8b24Hz": 7378000, "8b30Hz": 5902400, "8b48Hz": 2951200, "8b50Hz": 3541440, "8b60Hz": 2951200, "8b120Hz": 1475600, "8b144Hz": 1229600, "8b240Hz": 737800, "10b24Hz": 5728280, "10b30Hz": 4582624, "10b48Hz": 2291312, "10b50Hz": 2749574, "10b60Hz": 2291312, "10b120Hz": 1145656, "10b144Hz": 954713, "10b240Hz": 572828, "12b24Hz": 3688000, "12b30Hz": 2951200, "12b48Hz": 1475600, "12b50Hz": 1770720, "12b60Hz": 1475600, "12b120Hz": 737800, "12b144Hz": 612374, "12b240Hz": 368900 } },
+    { system: "Colorlight", bandwidth: "1G", rates: { "8b24Hz": 1625000, "8b30Hz": 1300000, "8b48Hz": 812500, "8b50Hz": 780000, "8b60Hz": 650000, "8b120Hz": 320000, "10b24Hz": 1218750, "10b30Hz": 975000, "10b48Hz": 609375, "10b50Hz": 585000, "10b60Hz": 487500, "10b120Hz": 240000, "12b24Hz": 975000, "12b30Hz": 780000, "12b48Hz": 487500, "12b50Hz": 468000, "12b60Hz": 390000, "12b120Hz": 192000 } }
+];
 const SCHEMATIC_TOKENS = Object.freeze({
     cabinetFill: "#ffffff",
     cabinetAltFill: "#f8fafc",
@@ -492,16 +500,29 @@ function equivalentUnits() {
     return Math.ceil((qty.Full || 0) + (qty.Half || 0) * .5 + (qty.Vertical || 0) * .5 + (qty.Quarter || 0) * .25 + (qty.Custom || 0));
 }
 
+function bitRateRecord(system = $("systemSelect")?.value, bandwidth = $("bandwidthSelect")?.value) {
+    return BIT_RATE_CAPACITY_DATA.find(row => row.system === system && row.bandwidth === bandwidth) || null;
+}
+function availableBitRates(system = $("systemSelect")?.value, bandwidth = $("bandwidthSelect")?.value) {
+    const record = bitRateRecord(system, bandwidth);
+    if (record) return Object.keys(record.rates);
+    return ["10b60Hz", "10b50Hz", "12b60Hz", "12b50Hz", "8b60Hz", "8b120Hz", "10b120Hz"];
+}
+function populateBitRateOptions(preferDefault = false) {
+    const select = $("bitRateSelect");
+    if (!select) return;
+    const previous = select.value;
+    const rates = availableBitRates();
+    select.innerHTML = rates.map(rate => `<option value="${escapeHtml(rate)}">${escapeHtml(rate)}</option>`).join("");
+    if (!preferDefault && rates.includes(previous)) select.value = previous;
+    else select.value = rates.includes("10b60Hz") ? "10b60Hz" : rates[0] || "10b60Hz";
+}
 function portCapacity() {
-    const key = `${$("systemSelect").value}|${$("bandwidthSelect").value}|${$("bitRateSelect").value}`;
-    return {
-        "Nova|1G|10b60Hz": 480000,
-        "Nova|5G|10b60Hz": 2291312,
-        "Brompton|1G|10b60Hz": 420000,
-        "MVR|1G|10b60Hz": 510000,
-        "MVR|2.5G|10b60Hz": 1275000,
-        "Colorlight|1G|10b60Hz": 487500
-    }[key] || 480000;
+    const record = bitRateRecord();
+    const rate = $("bitRateSelect")?.value || "10b60Hz";
+    if (record?.rates?.[rate]) return record.rates[rate];
+    if (record?.rates?.["10b60Hz"]) return record.rates["10b60Hz"];
+    return 480000;
 }
 function canvasPixels() {
     if ($("canvasSelect").value === "2K") return 1920 * 1080;
@@ -1049,7 +1070,7 @@ function populateFiberBoxOptions(preferDefault = false) {
 function applyDefaultProcessingCanvas(preferDefaults = false) {
     populateProcessorOptions(preferDefaults);
     populateFiberBoxOptions(preferDefaults);
-    if ($("bitRateSelect") && preferDefaults) $("bitRateSelect").value = "10b60Hz";
+    populateBitRateOptions(preferDefaults);
     applyProcessingRouteRules(preferDefaults);
 }
 function renderComparison() {
@@ -1397,11 +1418,10 @@ function renderPowerPage() {
     const totalPower = cfg.fullPerSet * spec.power + cfg.halfPerSet * spec.power * .5;
     const panelCount = cfg.fullPerSet + cfg.halfPerSet;
     $("powerSummary").innerHTML = summaryCards([
-        [["Country / region", $("countrySelect").value], ["Input voltage", `${$("voltageSelect").value} V`]],
-        [["Breaker rating", `${$("currentSelect").value} A`], ["Unit power", `${spec.power || "TBD"} W`]],
-        [["Estimated load", `${Math.round(totalPower).toLocaleString()} W`], ["Cable length", `${$("powerCableLength").value} m`]],
+        [["Input voltage", `${$("voltageSelect").value} V`], ["Breaker rating", `${$("currentSelect").value} A`]],
+        [["Unit power", `${spec.power || "TBD"} W`], ["Estimated load", `${Math.round(totalPower).toLocaleString()} W`]],
         [["Main power", stats["Main Power"] || "-"], ["Power jumpers", stats["Power Jumpers"] || "-"]],
-        [["Screen size", `${size.widthM.toFixed(2)} x ${size.heightM.toFixed(2)} m`], ["Wiring", $("powerRouteSelect").selectedOptions[0]?.textContent || "-"]]
+        [["Cable length", `${$("powerCableLength").value} m`], ["Wiring", $("powerRouteSelect").selectedOptions[0]?.textContent || "-"]]
     ]);
     $("powerDiagramMeta").textContent = `${$("voltageSelect").value} V / ${$("currentSelect").value} A / ${$("powerRouteSelect").selectedOptions[0]?.textContent || ""}`;
     $("powerProductThumb").src = productThumbnail();
@@ -1410,7 +1430,7 @@ function renderPowerPage() {
     $("powerScreenLoad").textContent = `${(totalPower / 1000).toFixed(1)} kW / ${panelCount} panels`;
     $("powerSelectedSummary").innerHTML = flatSummary([
         ["Product", state.model], ["Panel size", `${cabinetSize().w} x ${cabinetSize().h} mm`],
-        ["Country / region", $("countrySelect").value], ["Voltage", `${$("voltageSelect").value} V`], ["Current", `${$("currentSelect").value} A`],
+        ["Voltage", `${$("voltageSelect").value} V`], ["Current", `${$("currentSelect").value} A`],
         ["Wiring", $("powerRouteSelect").selectedOptions[0]?.textContent || "-"], ["Screen", `${cfg.cols} x ${physicalSize().displayRows} panels`]
     ]);
     $("powerCalculatedSummary").innerHTML = flatSummary([
